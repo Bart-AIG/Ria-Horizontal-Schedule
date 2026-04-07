@@ -213,10 +213,13 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   <div class="header-actions">
     <div class="cost-chip" id="totalCostChip"></div>
     <div class="alert-badge no-alerts" id="alertBadge" onclick="toggleAlerts()">&#9888; <span id="alertCount">0</span></div>
-    <button id="cloudSaveBtn" onclick="cloudSave()" title="Save to cloud" style="background:rgba(34,197,94,.25);border-color:rgba(34,197,94,.4)">&#9729; Save</button>
-    <span id="saveStatus" style="font-size:9px;color:rgba(255,255,255,.5);max-width:90px;text-align:center;line-height:1.2"></span>
+    <span id="editorControls" style="display:none">
+      <button id="cloudSaveBtn" onclick="cloudSave()" title="Save to cloud" style="background:rgba(34,197,94,.25);border-color:rgba(34,197,94,.4)">&#9729; Save</button>
+      <span id="saveStatus" style="font-size:9px;color:rgba(255,255,255,.5);max-width:90px;text-align:center;line-height:1.2"></span>
+      <button onclick="showSetup()">&#9881;</button>
+    </span>
+    <span id="viewerBadge" style="display:none;font-size:10px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);padding:4px 10px;border-radius:4px">VIEW ONLY</span>
     <button onclick="showExportNotes()">Export Notes</button>
-    <button onclick="showSetup()">&#9881;</button>
   </div>
 </div>
 
@@ -329,6 +332,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 <div class="toast" id="toast"></div>
 
 <script>
+// EDIT MODE: add ?mode=edit to URL for full editing, otherwise read-only viewer
+const EDIT_MODE=new URLSearchParams(window.location.search).get('mode')==='edit';
+
 function D(m,d){return new Date(2026,m-1,d)}
 const START_DATE=new Date(2026,2,17);
 const _ORIG_END=new Date(2026,11,7);
@@ -956,7 +962,7 @@ let _initialized=false;
 function render(){
   renderGantt();
   renderSummary();
-  if(_initialized)autoSave();
+  if(_initialized&&EDIT_MODE)autoSave();
 }
 
 function togglePhase(k){collapsedPhases[k]=!collapsedPhases[k];renderGantt()}
@@ -1427,8 +1433,8 @@ function openPanel(idx){
     h+='<div style="margin-top:8px;'+fc+';font-size:24px;font-weight:700;font-family:\'JetBrains Mono\',monospace">'+flt+'d <span style="font-size:12px;font-weight:500;color:var(--text-dim)">to paving target</span></div>';
   }
 
-  // Progress tracking (for IN PROGRESS tasks)
-  if(statusCat(t.status)==='inprogress'){
+  // Progress tracking (for IN PROGRESS tasks - editor only)
+  if(EDIT_MODE&&statusCat(t.status)==='inprogress'){
     const currProg=taskProgress[t.id]||{pct:0, daysLeft:t.dur};
     h+='<div class="panel-section"><h3>Progress Tracking</h3>';
     h+='<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px">';
@@ -1464,14 +1470,17 @@ function openPanel(idx){
     h+='</div></div>';
   }
 
-  // Status change toggles
-  h+='<div class="status-toggles">';
-  var statuses=['COMPLETE','COMPLETE (LATE)','IN PROGRESS','ACTIVE','SUBST. COMPLETE','PENDING','BLOCKED','ACTION NEEDED'];
-  statuses.forEach(s=>{
-    var isActive=t.status===s;
-    h+='<button class="status-toggle-btn'+(isActive?' active-status':'')+'" onclick="changeStatus('+idx+',\''+s.replace(/'/g,"\\'")+'\')">' +s+'</button>';
-  });
-  h+='</div></div>';
+  // Status change toggles (editor only)
+  if(EDIT_MODE){
+    h+='<div class="status-toggles">';
+    var statuses=['COMPLETE','COMPLETE (LATE)','IN PROGRESS','ACTIVE','SUBST. COMPLETE','PENDING','BLOCKED','ACTION NEEDED'];
+    statuses.forEach(s=>{
+      var isActive=t.status===s;
+      h+='<button class="status-toggle-btn'+(isActive?' active-status':'')+'" onclick="changeStatus('+idx+',\''+s.replace(/'/g,"\\'")+'\')">' +s+'</button>';
+    });
+    h+='</div>';
+  }
+  h+='</div>';
 
   // Cost breakdown
   h+='<div class="panel-section"><h3>Cost Breakdown</h3><div class="cost-breakdown">';
@@ -1511,13 +1520,20 @@ function openPanel(idx){
   h+='<div class="date-card" style="border-color:'+(endShift>0?'var(--critical)':endShift<0?'var(--complete)':'var(--border)')+'"><label>Proj. End</label><div class="date-val mono" style="color:'+(endShift>0?'var(--critical)':endShift<0?'var(--complete)':'inherit')+'">'+fmtDate(opE)+(endShift!==0?' <span style="font-size:10px">'+(endShift>0?'+':'')+endShift+'d</span>':'')+'</div></div>';
   h+='</div>';
 
-  // Actual dates - editable inputs
-  h+='<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  h+='<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text-dim);margin-bottom:4px">ACTUAL START</label>';
-  h+='<input type="date" value="'+(t.as?fmtDateISO(t.as):'')+'" onchange="setActualStart('+t.id+',this.value)" style="width:100%;padding:6px 8px;border:1px solid '+(t.as?'var(--complete)':'var(--border)')+';border-radius:4px;font-size:12px;font-family:JetBrains Mono,monospace;box-sizing:border-box;background:'+(t.as?'#f0fdf4':'#fff')+'"></div>';
-  h+='<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text-dim);margin-bottom:4px">ACTUAL END</label>';
-  h+='<input type="date" value="'+(t.ae?fmtDateISO(t.ae):'')+'" onchange="setActualEnd('+t.id+',this.value)" style="width:100%;padding:6px 8px;border:1px solid '+(t.ae?'var(--complete)':'var(--border)')+';border-radius:4px;font-size:12px;font-family:JetBrains Mono,monospace;box-sizing:border-box;background:'+(t.ae?'#f0fdf4':'#fff')+'"></div>';
-  h+='</div>';
+  // Actual dates
+  if(EDIT_MODE){
+    h+='<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    h+='<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text-dim);margin-bottom:4px">ACTUAL START</label>';
+    h+='<input type="date" value="'+(t.as?fmtDateISO(t.as):'')+'" onchange="setActualStart('+t.id+',this.value)" style="width:100%;padding:6px 8px;border:1px solid '+(t.as?'var(--complete)':'var(--border)')+';border-radius:4px;font-size:12px;font-family:JetBrains Mono,monospace;box-sizing:border-box;background:'+(t.as?'#f0fdf4':'#fff')+'"></div>';
+    h+='<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text-dim);margin-bottom:4px">ACTUAL END</label>';
+    h+='<input type="date" value="'+(t.ae?fmtDateISO(t.ae):'')+'" onchange="setActualEnd('+t.id+',this.value)" style="width:100%;padding:6px 8px;border:1px solid '+(t.ae?'var(--complete)':'var(--border)')+';border-radius:4px;font-size:12px;font-family:JetBrains Mono,monospace;box-sizing:border-box;background:'+(t.ae?'#f0fdf4':'#fff')+'"></div>';
+    h+='</div>';
+  }else if(t.as||t.ae){
+    h+='<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    if(t.as)h+='<div class="date-card" style="border-color:var(--complete)"><label>Actual Start</label><div class="date-val mono" style="color:var(--complete)">'+fmtDate(t.as)+'</div></div>';
+    if(t.ae)h+='<div class="date-card" style="border-color:var(--complete)"><label>Actual End</label><div class="date-val mono" style="color:var(--complete)">'+fmtDate(t.ae)+'</div></div>';
+    h+='</div>';
+  }
   h+='</div>';
 
   // Predecessors (editable)
@@ -1531,9 +1547,12 @@ function openPanel(idx){
         h+='<li style="display:flex;align-items:center;gap:6px">';
         const plag=getLag(pid,t.id);
         h+='<span style="flex:1;cursor:pointer" onclick="openPanel('+pi+')"><span class="wbs mono" style="font-size:10px">'+pt.wbs+'</span> '+pt.name+'</span>';
-        h+='<input type="number" value="'+plag+'" onchange="setLinkLag('+pid+','+t.id+',this.value,'+t.id+')" style="width:52px;padding:2px 4px;border:1px solid var(--border);border-radius:3px;font-size:10px;font-family:JetBrains Mono,monospace;text-align:center;background:'+(plag<0?'#eff6ff':plag>0?'#fef9c3':'#fff')+'" title="Lag days (negative=lead/overlap, positive=delay)">';
-        h+='<span style="font-size:9px;color:var(--text-dim);width:12px">d</span>';
-        h+='<button onclick="event.stopPropagation();removeLink('+pid+','+t.id+')" style="background:#fee2e2;color:var(--critical);border:1px solid #fecaca;border-radius:3px;padding:1px 6px;font-size:10px;cursor:pointer;font-weight:700" title="Remove this predecessor link">&times;</button>';
+        if(plag!==0)h+='<span class="mono" style="font-size:10px;color:'+(plag<0?'var(--accent)':'#d97706')+'">'+(plag>0?'+':'')+plag+'d</span>';
+        if(EDIT_MODE){
+          h+='<input type="number" value="'+plag+'" onchange="setLinkLag('+pid+','+t.id+',this.value,'+t.id+')" style="width:52px;padding:2px 4px;border:1px solid var(--border);border-radius:3px;font-size:10px;font-family:JetBrains Mono,monospace;text-align:center;background:'+(plag<0?'#eff6ff':plag>0?'#fef9c3':'#fff')+'" title="Lag days (negative=lead/overlap, positive=delay)">';
+          h+='<span style="font-size:9px;color:var(--text-dim);width:12px">d</span>';
+          h+='<button onclick="event.stopPropagation();removeLink('+pid+','+t.id+')" style="background:#fee2e2;color:var(--critical);border:1px solid #fecaca;border-radius:3px;padding:1px 6px;font-size:10px;cursor:pointer;font-weight:700" title="Remove this predecessor link">&times;</button>';
+        }
         h+='</li>';
       }
     });
@@ -1541,20 +1560,21 @@ function openPanel(idx){
   }else{
     h+='<div style="font-size:11px;color:var(--text-dim);padding:4px 0">No predecessors</div>';
   }
-  // Add predecessor dropdown
-  h+='<div style="margin-top:8px;display:flex;gap:6px;align-items:center">';
-  h+='<select id="addPredSelect_'+t.id+'" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:#fff">';
-  h+='<option value="">+ Add predecessor...</option>';
-  tasks.forEach(ot=>{
-    if(ot.type||ot.id===t.id)return;
-    if(t.pred&&t.pred.includes(ot.id))return;
-    // Don't allow adding a successor as a predecessor (circular)
-    if(ot.pred&&ot.pred.includes(t.id))return;
-    h+='<option value="'+ot.id+'">'+ot.wbs+' '+ot.name+'</option>';
-  });
-  h+='</select>';
-  h+='<button onclick="addPredFromSelect('+t.id+')" style="background:var(--navy);color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap">Add</button>';
-  h+='</div>';
+  // Add predecessor dropdown (editor only)
+  if(EDIT_MODE){
+    h+='<div style="margin-top:8px;display:flex;gap:6px;align-items:center">';
+    h+='<select id="addPredSelect_'+t.id+'" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:#fff">';
+    h+='<option value="">+ Add predecessor...</option>';
+    tasks.forEach(ot=>{
+      if(ot.type||ot.id===t.id)return;
+      if(t.pred&&t.pred.includes(ot.id))return;
+      if(ot.pred&&ot.pred.includes(t.id))return;
+      h+='<option value="'+ot.id+'">'+ot.wbs+' '+ot.name+'</option>';
+    });
+    h+='</select>';
+    h+='<button onclick="addPredFromSelect('+t.id+')" style="background:var(--navy);color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap">Add</button>';
+    h+='</div>';
+  }
   h+='</div>';
 
   // Successors (editable)
@@ -1567,29 +1587,33 @@ function openPanel(idx){
       h+='<li style="display:flex;align-items:center;gap:6px">';
       const slag=getLag(t.id,s.id);
       h+='<span style="flex:1;cursor:pointer" onclick="openPanel('+si+')"><span class="wbs mono" style="font-size:10px">'+s.wbs+'</span> '+s.name+'</span>';
-      h+='<input type="number" value="'+slag+'" onchange="setLinkLag('+t.id+','+s.id+',this.value,'+t.id+')" style="width:52px;padding:2px 4px;border:1px solid var(--border);border-radius:3px;font-size:10px;font-family:JetBrains Mono,monospace;text-align:center;background:'+(slag<0?'#eff6ff':slag>0?'#fef9c3':'#fff')+'" title="Lag days (negative=lead/overlap, positive=delay)">';
-      h+='<span style="font-size:9px;color:var(--text-dim);width:12px">d</span>';
-      h+='<button onclick="event.stopPropagation();removeLink('+t.id+','+s.id+')" style="background:#fee2e2;color:var(--critical);border:1px solid #fecaca;border-radius:3px;padding:1px 6px;font-size:10px;cursor:pointer;font-weight:700" title="Remove this successor link">&times;</button>';
+      if(slag!==0)h+='<span class="mono" style="font-size:10px;color:'+(slag<0?'var(--accent)':'#d97706')+'">'+(slag>0?'+':'')+slag+'d</span>';
+      if(EDIT_MODE){
+        h+='<input type="number" value="'+slag+'" onchange="setLinkLag('+t.id+','+s.id+',this.value,'+t.id+')" style="width:52px;padding:2px 4px;border:1px solid var(--border);border-radius:3px;font-size:10px;font-family:JetBrains Mono,monospace;text-align:center;background:'+(slag<0?'#eff6ff':slag>0?'#fef9c3':'#fff')+'" title="Lag days (negative=lead/overlap, positive=delay)">';
+        h+='<span style="font-size:9px;color:var(--text-dim);width:12px">d</span>';
+        h+='<button onclick="event.stopPropagation();removeLink('+t.id+','+s.id+')" style="background:#fee2e2;color:var(--critical);border:1px solid #fecaca;border-radius:3px;padding:1px 6px;font-size:10px;cursor:pointer;font-weight:700" title="Remove this successor link">&times;</button>';
+      }
       h+='</li>';
     });
     h+='</ul>';
   }else{
     h+='<div style="font-size:11px;color:var(--text-dim);padding:4px 0">No successors</div>';
   }
-  // Add successor dropdown
-  h+='<div style="margin-top:8px;display:flex;gap:6px;align-items:center">';
-  h+='<select id="addSuccSelect_'+t.id+'" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:#fff">';
-  h+='<option value="">+ Add successor...</option>';
-  tasks.forEach(ot=>{
-    if(ot.type||ot.id===t.id)return;
-    if(succs.some(s=>s.id===ot.id))return;
-    // Don't allow adding a predecessor as a successor (circular)
-    if(t.pred&&t.pred.includes(ot.id))return;
-    h+='<option value="'+ot.id+'">'+ot.wbs+' '+ot.name+'</option>';
-  });
-  h+='</select>';
-  h+='<button onclick="addSuccFromSelect('+t.id+')" style="background:var(--navy);color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap">Add</button>';
-  h+='</div>';
+  // Add successor dropdown (editor only)
+  if(EDIT_MODE){
+    h+='<div style="margin-top:8px;display:flex;gap:6px;align-items:center">';
+    h+='<select id="addSuccSelect_'+t.id+'" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:#fff">';
+    h+='<option value="">+ Add successor...</option>';
+    tasks.forEach(ot=>{
+      if(ot.type||ot.id===t.id)return;
+      if(succs.some(s=>s.id===ot.id))return;
+      if(t.pred&&t.pred.includes(ot.id))return;
+      h+='<option value="'+ot.id+'">'+ot.wbs+' '+ot.name+'</option>';
+    });
+    h+='</select>';
+    h+='<button onclick="addSuccFromSelect('+t.id+')" style="background:var(--navy);color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap">Add</button>';
+    h+='</div>';
+  }
   h+='</div>';
 
   if(t.notes)h+='<div class="panel-section"><h3>Notes</h3><div class="panel-notes">'+t.notes+'</div></div>';
@@ -2070,6 +2094,14 @@ document.getElementById('updatedSpan').textContent=fmtDate(TODAY);
   else{c.className='countdown-chip chip-red';c.textContent=Math.abs(daysLeft)+' DAYS PAST PAVING TARGET'}
 })();
 buildStatusFilters();
+
+// Show/hide editor controls based on mode
+if(EDIT_MODE){
+  document.getElementById('editorControls').style.display='inline';
+  document.title='[EDITOR] '+document.title;
+}else{
+  document.getElementById('viewerBadge').style.display='inline';
+}
 
 // Boot sequence: try cloud first, fall back to localStorage
 (async function boot(){
