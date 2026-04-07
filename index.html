@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ria at Round Rock - Full Construction Schedule</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0f2640;--navy-mid:#1a3a5c;--navy-light:#264e78;--bg:#f5f6f8;--card-bg:#fff;
+  --text:#1a1a2e;--text-dim:#6b7280;--text-light:#9ca3af;--border:#e2e5ea;--accent:#2563eb;
+  --complete:#16a34a;--inprogress:#d97706;--pending:#3b82f6;--blocked:#dc2626;--milestone:#7c3aed;
+  --delay:#ef4444;--critical:#dc2626;
+  --gc:#d97706;--owner:#475569;--utility:#7c3aed;--multi:#0891b2;
+  --row-h:38px;--label-w:580px;--day-w:4.8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* HEADER */
+.header{position:sticky;top:0;z-index:100;background:linear-gradient(135deg,var(--navy),var(--navy-mid),var(--navy-light));color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:700}
+.header-meta{display:flex;gap:14px;align-items:center;font-size:12px;margin-top:4px;color:rgba(255,255,255,.7)}
+.header-actions{display:flex;gap:8px;align-items:center}
+.header-actions button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;transition:background .15s}
+.header-actions button:hover{background:rgba(255,255,255,.25)}
+.cost-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;background:#22c55e;color:#052e16}
+.countdown-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.chip-amber{background:#fbbf24;color:#78350f}.chip-green{background:#22c55e;color:#052e16}.chip-red{background:#ef4444;color:#fff}
+.alert-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:transform .15s}
+.alert-badge:hover{transform:scale(1.05)}
+.alert-badge.has-alerts{background:#ef4444;color:#fff;animation:pulse-alert 2s infinite}
+.alert-badge.no-alerts{background:#22c55e;color:#052e16}
+@keyframes pulse-alert{0%,100%{opacity:1}50%{opacity:.7}}
+
+/* TOOLBAR */
+.toolbar{position:sticky;top:68px;z-index:99;background:var(--card-bg);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.toolbar-group{display:flex;gap:4px;align-items:center}
+.toolbar-group::before{content:attr(data-label);font-size:10px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.05em;margin-right:4px}
+.toolbar-sep{width:1px;height:24px;background:var(--border);margin:0 8px}
+.filter-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:#fff;font-size:11px;font-weight:500;cursor:pointer;color:var(--text-dim);transition:all .15s}
+.filter-btn:hover{border-color:var(--accent);color:var(--text)}
+.filter-btn.active-accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-btn.active-critical{background:var(--critical);color:#fff;border-color:var(--critical)}
+.filter-btn .count{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;background:rgba(0,0,0,.08);padding:1px 5px;border-radius:4px}
+.filter-btn.active-accent .count,.filter-btn.active-critical .count{background:rgba(255,255,255,.25)}
+
+/* COST SUMMARY BAR */
+
+/* DELAY COST BAR */
+.delay-bar{position:sticky;top:112px;z-index:98;background:#fef2f2;border-bottom:1px solid #fecaca;padding:8px 16px;display:flex;gap:24px;align-items:center;font-size:12px}
+.delay-stat{display:flex;flex-direction:column;gap:1px}
+.delay-stat label{font-size:9px;font-weight:600;text-transform:uppercase;color:var(--critical);letter-spacing:.05em}
+.delay-stat .val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--critical)}
+.delay-stat .val.muted{color:var(--text-dim);font-size:11px}
+.delay-note{font-size:10px;color:var(--text-dim);margin-left:auto;max-width:360px;text-align:right;line-height:1.3}
+
+/* LEGEND */
+.legend-bar{position:sticky;top:152px;z-index:97;background:#f9fafb;border-bottom:1px solid var(--border);padding:5px 16px;display:flex;gap:16px;align-items:center;font-size:11px;color:var(--text-dim)}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-swatch{width:20px;height:10px;border-radius:3px}
+.swatch-complete{background:linear-gradient(90deg,#16a34a,#22c55e)}
+.swatch-inprogress{background:linear-gradient(90deg,#d97706,#f59e0b)}
+.swatch-pending{background:linear-gradient(90deg,#3b82f6,#60a5fa);opacity:.5}
+.swatch-critical{background:var(--critical);border:2px solid var(--critical)}
+
+/* GANTT */
+.gantt-wrap{overflow-x:auto;position:relative}
+.gantt{display:flex;flex-direction:column;min-width:fit-content}
+.gantt-header{display:flex;position:sticky;top:216px;z-index:50;background:var(--card-bg);border-bottom:1px solid var(--border);height:40px}
+.gantt-header-label{width:var(--label-w);min-width:var(--label-w)}
+.gantt-header-timeline{position:relative}
+.month-bar{position:absolute;top:0;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--navy);border-right:1px solid var(--border)}
+.week-bar{position:absolute;top:22px;height:18px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-light);border-right:1px solid #f0f0f0;font-family:'JetBrains Mono',monospace}
+.week-bar.today-week{background:rgba(220,38,38,.08);color:var(--critical);font-weight:600}
+
+/* ROWS */
+.gantt-row{display:flex;height:var(--row-h);border-bottom:1px solid #f3f4f6;cursor:pointer;transition:background .1s}
+.gantt-row:hover{background:#f8f9fb}
+.gantt-row.phase-row{background:var(--navy);color:#fff;cursor:pointer;font-weight:700;font-size:12px;height:34px}
+.gantt-row.phase-row:hover{background:var(--navy-mid)}
+.gantt-row.critical-row{background:rgba(220,38,38,.05)}
+.gantt-row.critical-row:hover{background:rgba(220,38,38,.10)}
+.row-label{width:var(--label-w);min-width:var(--label-w);display:flex;align-items:center;gap:6px;padding:0 10px;font-size:12px;white-space:nowrap;overflow:hidden;border-right:1px solid var(--border)}
+.row-label .wbs{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-light);min-width:32px}
+.row-label .task-name{flex:1;overflow:hidden;text-overflow:ellipsis}
+.row-label .task-name.critical-name{color:var(--critical);font-weight:600}
+.row-label .cost-val{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:var(--complete);white-space:nowrap;min-width:70px;text-align:right}
+.row-label .dur-val{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-light);min-width:28px;text-align:center}
+.row-label .status-pip{font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.pip-complete{background:#dcfce7;color:#166534}.pip-inprogress{background:#fff7ed;color:#9a3412}.pip-pending{background:#eff6ff;color:#1e40af}.pip-blocked{background:#fef2f2;color:#991b1b}
+
+/* FLOAT BADGES */
+.float-badge{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:2px;white-space:nowrap}
+.float-ok{background:#dcfce7;color:#166534}
+.float-warn{background:#fff7ed;color:#9a3412}
+.float-critical{background:#fef2f2;color:#991b1b}
+
+/* ALERT INLINE */
+.alert-inline{font-size:10px;margin-left:2px}
+.alert-inline.overdue{color:#dc2626;animation:pulse-alert 2s infinite}
+.alert-inline.at-risk{color:#d97706}
+
+.row-timeline{position:relative;flex:1}
+.bar{position:absolute;top:50%;transform:translateY(-50%);height:18px;border-radius:4px;min-width:6px;transition:box-shadow .15s}
+.bar-complete{background:linear-gradient(90deg,#16a34a,#22c55e)}
+.bar-inprogress{background:linear-gradient(90deg,#d97706,#f59e0b)}
+.bar-pending{background:linear-gradient(90deg,#3b82f6,#60a5fa);opacity:.45}
+.bar-blocked{background:repeating-linear-gradient(45deg,#dc2626,#dc2626 3px,#ef4444 3px,#ef4444 6px)}
+.bar-milestone{width:14px!important;height:14px!important;min-width:14px;background:var(--milestone);border-radius:2px;transform:translateY(-50%) rotate(45deg)}
+.bar.critical-bar{box-shadow:0 0 0 2px var(--critical),0 0 8px rgba(220,38,38,.35)}
+.bar .bar-cost-label{position:absolute;left:calc(100% + 6px);top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;color:var(--text-dim);white-space:nowrap}
+.today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--delay);z-index:5;pointer-events:none}
+.today-line::after{content:'';position:absolute;top:-4px;left:-4px;width:10px;height:10px;background:var(--delay);border-radius:50%}
+.phase-toggle{margin-right:6px;font-size:10px;transition:transform .2s;display:inline-block}
+.phase-toggle.collapsed{transform:rotate(-90deg)}
+
+/* PHASE COST */
+.phase-cost{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:rgba(255,255,255,.85);margin-left:auto;padding-right:8px}
+
+/* DEPENDENCY ARROWS SVG */
+.dep-svg{position:absolute;top:0;left:0;pointer-events:none;z-index:4}
+.dep-svg path{fill:none;stroke:#94a3b8;stroke-width:1.5;opacity:.4}
+.dep-svg path.crit-dep{stroke:var(--critical);opacity:.6}
+.dep-svg path.highlight-dep{stroke:var(--accent);stroke-width:2.5;opacity:1}
+
+/* DETAIL PANEL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:150;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.detail-panel{position:fixed;top:0;right:-520px;width:500px;height:100vh;background:#fff;z-index:200;overflow-y:auto;box-shadow:-4px 0 24px rgba(0,0,0,.15);transition:right .25s ease;padding:24px}
+.detail-panel.open{right:0}
+.panel-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-dim);padding:0 4px}
+.panel-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.panel-header h2{font-size:16px;font-weight:700}
+.panel-header .wbs-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-light)}
+.panel-section{margin-bottom:16px}
+.panel-section h3{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-light);letter-spacing:.05em;margin-bottom:6px}
+.date-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.date-card{background:#f9fafb;border:1px solid var(--border);border-radius:6px;padding:8px 10px}
+.date-card label{font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-light)}
+.date-card .date-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;margin-top:2px}
+.panel-notes{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 12px;font-size:12px;line-height:1.5}
+.cost-breakdown{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:10px 12px;font-size:12px}
+.cost-breakdown table{width:100%;border-collapse:collapse;margin-top:6px}
+.cost-breakdown th,.cost-breakdown td{text-align:left;padding:3px 6px;font-size:11px;border-bottom:1px solid #dcfce7}
+.cost-breakdown th{font-weight:600;color:var(--text-dim);font-size:10px;text-transform:uppercase}
+.cost-breakdown td.amt{text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600}
+.cost-breakdown .total-row td{border-top:2px solid #16a34a;font-weight:700;color:var(--text);padding-top:6px}
+.critical-badge{display:inline-flex;align-items:center;gap:4px;background:#fef2f2;color:var(--critical);font-size:11px;font-weight:600;padding:4px 10px;border-radius:4px;border:1px solid #fecaca}
+.pred-list{list-style:none}
+.pred-list li{font-size:12px;padding:4px 8px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pred-list li:hover{background:#f3f4f6}
+
+/* STATUS CHANGE IN PANEL */
+.status-toggles{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.status-toggle-btn{font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:500;transition:all .15s}
+.status-toggle-btn:hover{border-color:var(--accent)}
+.status-toggle-btn.active-status{border-color:var(--accent);background:var(--accent);color:#fff}
+
+/* ALERT DROPDOWN */
+.alert-dropdown{position:fixed;top:72px;right:24px;width:440px;max-height:500px;background:#fff;border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,.2);z-index:250;display:none;flex-direction:column;overflow:hidden}
+.alert-dropdown.open{display:flex}
+.alert-tabs{display:flex;border-bottom:1px solid var(--border);padding:8px 12px;gap:6px}
+.alert-tab{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:500}
+.alert-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.alert-list{overflow-y:auto;max-height:400px;padding:8px}
+.alert-item{display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:6px;cursor:pointer;border-bottom:1px solid #f3f4f6}
+.alert-item:hover{background:#f8f9fb}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:2px}
+.alert-info{flex:1;font-size:12px}
+.alert-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace}
+.tag-overdue{background:#fef2f2;color:#991b1b}
+.tag-atrisk{background:#fff7ed;color:#9a3412}
+.tag-blocked{background:#fef2f2;color:#991b1b}
+.tag-cp{background:#fef2f2;color:#dc2626;margin-left:4px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;max-width:700px;width:90%;max-height:80vh;overflow-y:auto;padding:24px;box-shadow:0 12px 48px rgba(0,0,0,.2)}
+.modal textarea{width:100%;height:300px;font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid var(--border);border-radius:6px;padding:12px;resize:vertical}
+.modal button{margin-top:8px;padding:6px 16px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-weight:600;cursor:pointer;font-size:12px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;z-index:400;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+
+/* COST SUMMARY TABLE */
+.summary-section{padding:16px 24px;background:var(--card-bg);border-top:2px solid var(--border);margin-top:8px}
+.summary-section h2{font-size:16px;font-weight:700;margin-bottom:12px;color:var(--navy)}
+.summary-table{width:100%;max-width:1000px;border-collapse:collapse}
+.summary-table th,.summary-table td{padding:6px 10px;text-align:left;font-size:12px;border-bottom:1px solid var(--border)}
+.summary-table th{background:#f9fafb;font-weight:600;font-size:10px;text-transform:uppercase;color:var(--text-dim);letter-spacing:.04em}
+.summary-table td.amt{text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600}
+.summary-table tr.phase-summary{background:#f0fdf4;font-weight:700}
+.summary-table tr.phase-summary td{border-top:2px solid #bbf7d0;padding:8px 10px}
+.summary-table tr.grand-total{background:var(--navy);color:#fff;font-weight:700}
+.summary-table tr.grand-total td{padding:10px;font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Ria at Round Rock - Full Construction Schedule</h1>
+    <div class="header-meta">
+      <span>705 Limmer Loop, Hutto TX</span><span>|</span>
+      <span>GC: JL Gray Construction</span><span>|</span>
+      <span>Eng: Quiddity Engineering</span><span>|</span>
+      <span>Viewed: <span id="updatedSpan" class="mono"></span></span><span>|</span>
+      <span id="countdownChip"></span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="cost-chip" id="totalCostChip"></div>
+    <div class="alert-badge no-alerts" id="alertBadge" onclick="toggleAlerts()">&#9888; <span id="alertCount">0</span></div>
+    <button id="cloudSaveBtn" onclick="cloudSave()" title="Save to cloud" style="background:rgba(34,197,94,.25);border-color:rgba(34,197,94,.4)">&#9729; Save</button>
+    <span id="saveStatus" style="font-size:9px;color:rgba(255,255,255,.5);max-width:90px;text-align:center;line-height:1.2"></span>
+    <button onclick="showExportNotes()">Export Notes</button>
+    <button onclick="showSetup()">&#9881;</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-group" data-label="Status" id="statusFilters"></div>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-group" data-label="View">
+    <button class="filter-btn" id="critPathBtn" onclick="toggleCriticalPath()">Critical Path Only</button>
+    <button class="filter-btn" id="depToggle" onclick="toggleDependencies()">Dependencies</button>
+    <button class="filter-btn" id="costToggle" onclick="toggleCostBars()">Cost on Bars</button>
+  </div>
+</div>
+
+
+<div class="delay-bar" id="delayBar">
+  <div class="delay-stat"><label>Current Phase</label><div class="val" id="currentPhaseLabel" style="color:var(--navy);font-size:11px"></div></div>
+  <div class="delay-stat"><label>Est. Loan Balance</label><div class="val" id="currentBalance"></div></div>
+  <div class="delay-stat"><label>Daily Interest Cost</label><div class="val" id="dailyInterest"></div></div>
+  <div class="delay-stat"><label>Weekly Interest Cost</label><div class="val" id="weeklyTotal"></div></div>
+  <div class="delay-stat"><label>Variance</label><div class="val" id="currentVariance"></div></div>
+  <div class="delay-note">$57.8M construction loan @ 9.25% | Interest on drawn balance only<br>Source: Draw Tracker Closing Budget v3</div>
+</div>
+
+<div class="legend-bar">
+  <div class="legend-item"><div class="legend-swatch swatch-complete"></div>Complete</div>
+  <div class="legend-item"><div class="legend-swatch swatch-inprogress"></div>In Progress</div>
+  <div class="legend-item"><div class="legend-swatch swatch-pending"></div>Pending</div>
+  <div class="legend-item"><div class="legend-swatch swatch-critical"></div>Critical Path</div>
+  <div class="legend-item"><div class="legend-swatch" style="width:10px;height:10px;background:var(--milestone);transform:rotate(45deg);border-radius:2px"></div>Milestone</div>
+  <div class="legend-item" style="margin-left:auto;font-weight:600;color:var(--complete)">$ = Cost Loaded from JL Gray Bid Form</div>
+</div>
+
+<div class="gantt-wrap" id="ganttWrap"><div class="gantt" id="gantt"></div></div>
+
+<!-- COST SUMMARY TABLE -->
+<div class="summary-section" id="summarySection"></div>
+
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+<div class="detail-panel" id="detailPanel"></div>
+
+<div class="alert-dropdown" id="alertDropdown"></div>
+
+<div class="modal-overlay" id="exportModal">
+  <div class="modal">
+    <h2>Export Schedule Notes with Costs</h2>
+    <textarea id="exportText" readonly></textarea>
+    <button onclick="navigator.clipboard.writeText(document.getElementById('exportText').value);showToast('Copied!')">Copy to Clipboard</button>
+    <button onclick="document.getElementById('exportModal').classList.remove('open')" style="background:#fff;color:var(--text);border-color:var(--border);margin-left:6px">Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="guideModal">
+  <div class="modal">
+    <h2>Schedule Guide</h2>
+    <div style="font-size:13px;line-height:1.6">
+      <p><strong>Full Construction Schedule with Cost Loading</strong> for Ria at Round Rock horizontal construction (48 tasks, 6 phases). Tracks all activities from preconstruction through close-out and acceptance.</p>
+      <p style="margin-top:8px"><strong>Cost data source:</strong> JL Gray Construction Exhibit B Bid Form dated 2/19/2026. Total base bid: $4,146,104.60.</p>
+      <h3 style="margin-top:12px;font-size:13px">Features:</h3>
+      <ul style="margin:8px 0 8px 20px">
+        <li><strong>Click any task row</strong> to see cost breakdown by bid line item, dates, predecessors, and notes.</li>
+        <li><strong>Cost on Bars</strong> toggle shows dollar amounts directly on the Gantt bars.</li>
+        <li><strong>Critical Path Only</strong> filters to critical and near-critical tasks.</li>
+        <li><strong>Dependencies</strong> toggle draws predecessor arrows between tasks.</li>
+        <li><strong>Float badges</strong> show days remaining to target on each active task.</li>
+        <li><strong>Alert system</strong> flags overdue, at-risk, and blocked tasks.</li>
+        <li><strong>Actual dates</strong> override the schedule. Enter actual start/end on any task and the cascade recalculates.</li>
+        <li><strong>Lag/Lead</strong> on predecessor links. Negative = overlap (start before pred finishes). Positive = wait gap.</li>
+        <li><strong>Base vs Projected dates</strong> in detail panel. Base dates are the original plan; projected dates are what the schedule runs on.</li>
+        <li><strong>Root cause tracing</strong> in delay alerts shows what changed to cause the slip.</li>
+        <li><strong>Cloud save</strong> via JSONBin.io. Click &#9881; to configure, then &#9729; Save pushes to cloud.</li>
+        <li><strong>Interest cost bar</strong> shows daily interest carry based on cumulative loan draws from Master Budget.</li>
+        <li><strong>Phase headers</strong> show phase subtotals and collapse/expand with arrow toggles.</li>
+        <li><strong>Export Notes</strong> generates a text summary with costs.</li>
+      </ul>
+      <p style="color:var(--text-dim);font-size:11px;margin-top:12px">Note: Dry Utilities (IDs 21-25) are NOT IN CONTRACT and show $0. Cost mapping is approximate where bid items span multiple schedule activities.</p>
+    </div>
+    <button onclick="document.getElementById('guideModal').classList.remove('open')" style="margin-top:12px">Close</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="setupModal">
+  <div class="modal" style="max-width:520px">
+    <h2>&#9729; Cloud Save Setup</h2>
+    <div style="font-size:13px;line-height:1.7;margin-bottom:12px">
+      <p>Connect to <strong>JSONBin.io</strong> so your schedule changes save to the cloud and persist across sessions and devices.</p>
+      <ol style="margin:10px 0 10px 20px">
+        <li>Go to <a href="https://jsonbin.io" target="_blank" style="color:var(--accent);font-weight:600">jsonbin.io</a> and create a free account</li>
+        <li>Click your avatar (top right) &rarr; <strong>API Keys</strong></li>
+        <li>Copy your <strong>X-Master-Key</strong> and paste it below</li>
+      </ol>
+    </div>
+    <label style="font-size:11px;font-weight:600;color:var(--text-dim)">API KEY (X-Master-Key)</label>
+    <input type="text" id="setupApiKey" placeholder="$2a$10$xxxxxxxxxxxx..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:4px;font-family:JetBrains Mono,monospace;font-size:12px;margin:4px 0 12px;box-sizing:border-box">
+    <label style="font-size:11px;font-weight:600;color:var(--text-dim)">BIN ID <span style="font-weight:400">(leave blank on first setup - auto-created on first save)</span></label>
+    <input type="text" id="setupBinId" placeholder="Auto-created on first save" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:4px;font-family:JetBrains Mono,monospace;font-size:12px;margin:4px 0 16px;box-sizing:border-box">
+    <div style="display:flex;gap:8px">
+      <button onclick="saveSetup()" style="flex:1;background:var(--navy);color:#fff;border:none;padding:10px;border-radius:6px;font-weight:700;cursor:pointer">Save Config</button>
+      <button onclick="document.getElementById('setupModal').classList.remove('open')" style="background:#fff;color:var(--text);border:1px solid var(--border);padding:10px 16px;border-radius:6px;cursor:pointer">Close</button>
+    </div>
+    <div style="margin-top:12px;padding:10px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;font-size:11px;color:#0c4a6e">
+      <strong>After setup:</strong> Click <strong>&#9729; Save</strong> to push changes to cloud. Changes auto-save locally between cloud saves. Share the GitHub Pages URL with your team - everyone loads the same cloud state.
+    </div>
+    <div style="margin-top:8px;border-top:1px solid var(--border);padding-top:10px;display:flex;gap:8px">
+      <button onclick="exportToFile()" style="font-size:11px;background:#fff;color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:4px;cursor:pointer">&#128190; Download JSON Backup</button>
+      <label style="font-size:11px;background:#fff;color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:4px;cursor:pointer">&#128194; Load JSON File<input type="file" accept=".json" style="display:none" onchange="loadFromFile(event)"></label>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function D(m,d){return new Date(2026,m-1,d)}
+const START_DATE=new Date(2026,2,17);
+const _ORIG_END=new Date(2026,11,7);
+const TODAY=(function(){const d=new Date();d.setHours(0,0,0,0);return d})();
+const END_DATE=TODAY>_ORIG_END?new Date(TODAY.getTime()+14*864e5):_ORIG_END;
+const NTP_DATE=D(4,3);
+const TARGET_DATE=D(10,5);
+const TOTAL_DAYS=Math.ceil((END_DATE-START_DATE)/864e5);
+const DAY_W=4.8;
+const TOTAL_BID=4146104.60;
+
+// FINANCING - Source: Master Budget (26-month cashflow with monthly interest)
+const TOTAL_LOAN=57775000;
+const LOAN_RATE=0.0925;
+
+// Monthly draw schedule from Master Budget (26 months, Mo 1 = April 2026)
+// Month dates: Mo1=4/1/26, Mo2=5/1/26, Mo3=5/31/26, Mo4=6/30/26, Mo5=7/30/26, Mo6=8/29/26, Mo7=9/28/26, Mo8=10/28/26...
+const MONTHLY_CASHFLOW=[
+  {mo:0, label:"Pre-Close", cumDraws:10294381, monthlyInt:0, cumTotal:10294381},
+  {mo:1, label:"Apr 2026", cumDraws:13495687, monthlyInt:11951, cumTotal:13507638},
+  {mo:2, label:"May 2026", cumDraws:14249975, monthlyInt:36628, cumTotal:14298554},
+  {mo:3, label:"Jun 2026", cumDraws:15004263, monthlyInt:42442, cumTotal:15095285},
+  {mo:4, label:"Jul 2026", cumDraws:15858551, monthlyInt:48257, cumTotal:15997829},
+  {mo:5, label:"Aug 2026", cumDraws:18329596, monthlyInt:54842, cumTotal:18523715},
+  {mo:6, label:"Sep 2026", cumDraws:19301489, monthlyInt:73889, cumTotal:19569497},
+  {mo:7, label:"Oct 2026", cumDraws:20686300, monthlyInt:81381, cumTotal:21035690},
+  {mo:8, label:"Nov 2026", cumDraws:21862549, monthlyInt:92056, cumTotal:22303995},
+  {mo:9, label:"Dec 2026", cumDraws:23469480, monthlyInt:101122, cumTotal:24012048},
+  {mo:10, label:"Jan 2027", cumDraws:25607108, monthlyInt:113509, cumTotal:26263185},
+  {mo:11, label:"Feb 2027", cumDraws:28364435, monthlyInt:129987, cumTotal:29150499},
+  {mo:12, label:"Mar 2027", cumDraws:31558085, monthlyInt:151241, cumTotal:32495390},
+  {mo:13, label:"Apr 2027", cumDraws:35017084, monthlyInt:175859, cumTotal:36130248},
+  {mo:14, label:"May 2027", cumDraws:38476083, monthlyInt:202522, cumTotal:39791768},
+  {mo:15, label:"Jun 2027", cumDraws:41669733, monthlyInt:229185, cumTotal:43214603},
+  {mo:16, label:"Jul 2027", cumDraws:44598033, monthlyInt:253803, cumTotal:46396707},
+  {mo:17, label:"Aug 2027", cumDraws:47128310, monthlyInt:276375, cumTotal:49203359},
+  {mo:18, label:"Sep 2027", cumDraws:49260564, monthlyInt:295879, cumTotal:51631492},
+  {mo:19, label:"Oct 2027", cumDraws:51392818, monthlyInt:312316, cumTotal:54076061},
+  {mo:20, label:"Nov 2027", cumDraws:53679621, monthlyInt:328752, cumTotal:56691616},
+  {mo:21, label:"Dec 2027", cumDraws:55568400, monthlyInt:346379, cumTotal:58926775},
+  {mo:22, label:"Jan 2028", cumDraws:57324505, monthlyInt:360938, cumTotal:61043818},
+  {mo:23, label:"Feb 2028", cumDraws:59057936, monthlyInt:374475, cumTotal:63151724},
+  {mo:24, label:"Mar 2028", cumDraws:60548692, monthlyInt:387837, cumTotal:65030316},
+  {mo:25, label:"Apr 2028", cumDraws:61906773, monthlyInt:399328, cumTotal:66787726},
+  {mo:26, label:"May 2028", cumDraws:62739156, monthlyInt:409797, cumTotal:68029906}
+];
+
+// Calculate draw balance at a given date using linear interpolation
+function getDrawBalanceAtDate(date){
+  // Construction start = NTP_DATE (4/3/2026) = month 1
+  // Calculate which month we're in
+  const msPerMonth=30.44*864e5; // avg days per month
+  const monthsFromStart=(date-NTP_DATE)/msPerMonth;
+
+  if(monthsFromStart<=0)return MONTHLY_CASHFLOW[0].cumDraws;
+  if(monthsFromStart>=26)return MONTHLY_CASHFLOW[26].cumDraws;
+
+  // Linear interpolation between months
+  const loIdx=Math.floor(monthsFromStart);
+  const hiIdx=Math.min(loIdx+1,26);
+  const frac=monthsFromStart-loIdx;
+  const lo=MONTHLY_CASHFLOW[loIdx].cumDraws;
+  const hi=MONTHLY_CASHFLOW[hiIdx].cumDraws;
+  return lo+(hi-lo)*frac;
+}
+
+// Calculate daily interest at a given date
+function dailyInterestAtDate(date){
+  const balance=getDrawBalanceAtDate(date);
+  return Math.round(balance*LOAN_RATE/365*100)/100;
+}
+
+// Get current project month (0-26, where 0 = pre-close, 1 = Apr 2026, etc.)
+function getCurrentProjectMonth(){
+  const msPerMonth=30.44*864e5;
+  const monthsFromStart=(TODAY-NTP_DATE)/msPerMonth;
+  return Math.max(0,Math.min(26,Math.floor(monthsFromStart)));
+}
+
+// Calculate delay cost for N days of project extension
+function calculateDelayCost(delayDays){
+  if(delayDays<=0)return 0;
+  // The project extends N days beyond month 26 at full balance
+  const tailBalance=MONTHLY_CASHFLOW[26].cumDraws;
+  const dailyIntAtTail=tailBalance*LOAN_RATE/365;
+  return Math.round(dailyIntAtTail*delayDays*100)/100;
+}
+
+// Updated per JL Gray email: -20 (structures off CP, outside street), +34 (tie-ins/inlet tops), +23 (crossings gate paving)
+const CRITICAL_PATH=[8,9,10,13,14,15,16,23,27,28,31,32,33,34,35,36,37,38,39,40,41];
+const NEAR_CRITICAL=[21,22];
+
+// Cost line item breakdowns per task
+const COST_ITEMS={
+  4:[
+    {item:"A-2",desc:"Reinforced filter fabric fence (5,910 LF)",amt:14775.00},
+    {item:"A-3",desc:"Stabilized construction access (1 EA)",amt:2185.00},
+    {item:"A-4",desc:"Rock berm (161 LF)",amt:5474.00},
+    {item:"A-5",desc:"Inlet protection (20 EA)",amt:3300.00},
+    {item:"A-7",desc:"Sedimentation trap (1 EA)",amt:3925.00},
+    {item:"A-10",desc:"Silt fence construction staking",amt:3640.00},
+    {item:"A-8p",desc:"Erosion control maintenance (Precon share)",amt:372.62}
+  ],
+  8:[
+    {item:"CG&D-1",desc:"Light clearing & grubbing (19.33 Ac)",amt:23292.65},
+    {item:"CG&D-2",desc:"Demolition existing culverts/driveways",amt:3075.00}
+  ],
+  9:[
+    {item:"M-1",desc:"Move-in & start-up incl permits/bonds",amt:100500.00},
+    {item:"D&E-1",desc:"Final Lot excavation (9,657 CY)",amt:24142.50},
+    {item:"D&E-3",desc:"Pond excavation (9,226 CY)",amt:80727.50},
+    {item:"D&E-6",desc:"Off-site disposal excess excavation (6,005 CY)",amt:79566.25},
+    {item:"P-1",desc:"Roadway excavation Medium Duty (9,078 CY)",amt:22695.00},
+    {item:"P-3",desc:"Roadway excavation Light Duty (1,416 CY)",amt:3540.00},
+    {item:"P-5",desc:"Roadway excavation Turn Lane (348 CY)",amt:4611.00},
+    {item:"A-8e",desc:"Erosion control maintenance (Earthwork share)",amt:1052.11},
+    {item:"A-16e",desc:"Material & density testing (Earthwork 24%)",amt:21370.80}
+  ],
+  10:[
+    {item:"D&E-2",desc:"Final Lot embankment (28,002 CY)",amt:84006.00},
+    {item:"D&E-4",desc:"Pond embankment (212 CY)",amt:1060.00},
+    {item:"P-2",desc:"Roadway embankment Medium Duty (881 CY)",amt:2202.50},
+    {item:"P-4",desc:"Roadway embankment Light Duty (719 CY)",amt:1797.50}
+  ],
+  11:[
+    {item:"D&E-5A",desc:"Moisture Conditioning - 3' zone (7,220 CY)",amt:36100.00},
+    {item:"D&E-5B",desc:"Moisture Conditioning - 2' zone fill lots (4,793 CY)",amt:28758.00},
+    {item:"A-16m",desc:"Material & density testing (Earthwork 16%)",amt:14247.20}
+  ],
+  13:[
+    {item:"A-13",desc:"Trench Safety Storm (3,908 LF)",amt:3908.00},
+    {item:"A-14",desc:"Trench Safety Water (5,991 LF)",amt:5991.00},
+    {item:"A-15",desc:"Trench Safety Wastewater (5,798 LF)",amt:13045.50},
+    {item:"D-23",desc:"Drainage construction staking",amt:5430.00},
+    {item:"W-16",desc:"Water distribution staking",amt:8055.00},
+    {item:"S-9",desc:"Sanitary sewer staking",amt:7750.00},
+    {item:"A-8w",desc:"Erosion control maintenance (Wet Util share)",amt:2082.31}
+  ],
+  14:[
+    {item:"S-1",desc:'6" PVC SDR-26 sewer pipe (2,220 LF)',amt:106560.00},
+    {item:"S-2",desc:'8" PVC SDR-26 sewer pipe (3,554 LF)',amt:204355.00},
+    {item:"S-3",desc:"Connect to CoRR Manhole",amt:8340.00},
+    {item:"S-4",desc:"4' sanitary sewer manholes (27 EA)",amt:166185.00},
+    {item:"S-6",desc:'6" single service (100 EA)',amt:146500.00},
+    {item:"S-7",desc:'6" double service (50 EA)',amt:131500.00},
+    {item:"S-8",desc:"Haul/spread/compact sewer spoils (2,424 CY)",amt:6060.00},
+    {item:"W-17",desc:"Plumbing permit/Allowance (Water & Sewer)",amt:32215.00},
+    {item:"A-16s",desc:"Material & density testing (Utilities 15%)",amt:13356.75}
+  ],
+  15:[
+    {item:"W-1",desc:'2" PVC C-900 waterline (2,344 LF)',amt:65632.00},
+    {item:"W-2",desc:'6" PVC C-900 waterline (49 LF)',amt:2107.00},
+    {item:"W-3",desc:'8" PVC C-900 waterline (3,598 LF)',amt:174503.00},
+    {item:"W-4",desc:"Fire Hydrants (9 EA)",amt:60120.00},
+    {item:"W-5",desc:'2" Gate Valve & Box (12 EA)',amt:22320.00},
+    {item:"W-6",desc:'6" Gate Valve & Box (9 EA)',amt:16110.00},
+    {item:"W-7",desc:'8" Gate Valve & Box (27 EA)',amt:83295.00},
+    {item:"W-8",desc:'16" Gate Valve & Box (1 EA)',amt:13475.00},
+    {item:"W-9",desc:'16" Wet Connect w/ Tapping sleeve',amt:12225.00},
+    {item:"W-10",desc:"2\" C-900 single service (100 EA)",amt:132500.00},
+    {item:"W-11",desc:"2\" C-900 double service (50 EA)",amt:83250.00},
+    {item:"W-12",desc:'6" water meter per Jonah standards',amt:35090.00},
+    {item:"W-13",desc:'8" Backflow Preventer Assembly',amt:41920.00},
+    {item:"W-14",desc:"Ductile iron fittings (1.42 Ton)",amt:25538.70},
+    {item:"W-15",desc:"Haul/spread/compact water spoils (1,923 CY)",amt:4807.50},
+    {item:"A-16w",desc:"Material & density testing (Utilities 15%)",amt:13356.75}
+  ],
+  16:[
+    {item:"D-1",desc:'18" HDPE storm (1,737 LF)',amt:102483.00},
+    {item:"D-2",desc:'24" HDPE storm (752 LF)',amt:59408.00},
+    {item:"D-3",desc:'30" HDPE storm (434 LF)',amt:43834.00},
+    {item:"D-4",desc:'36" HDPE storm (500 LF)',amt:66000.00},
+    {item:"D-5",desc:'42" HDPE storm (354 LF)',amt:61242.00},
+    {item:"D-6",desc:'24" RCP Class III (131 LF)',amt:12707.00},
+    {item:"D-13",desc:'18" miter cut headwall (2 EA)',amt:3330.00},
+    {item:"D-14",desc:'36" miter cut headwall (1 EA)',amt:8085.00},
+    {item:"D-15",desc:'42" miter cut headwall (1 EA)',amt:9810.00},
+    {item:"D-19",desc:"Haul/spread storm spoils (2,887 CY)",amt:7217.50},
+    {item:"D-24",desc:"Mortared Class I Riprap",amt:957.00},
+    {item:"D-25",desc:"Mortared Class III Riprap",amt:3886.00},
+    {item:"D-26",desc:"Mortared Class VII Riprap",amt:410.00},
+    {item:"A-12",desc:"Improvements to existing culverts",amt:8225.00}
+  ],
+  20:[
+    {item:"D-7",desc:"4' storm manhole (7 EA)",amt:29015.00},
+    {item:"D-8",desc:"5' storm manhole (5 EA)",amt:27400.00},
+    {item:"D-9",desc:"6' storm manhole (2 EA)",amt:14830.00},
+    {item:"D-10",desc:"7' storm manhole (1 EA)",amt:11715.00},
+    {item:"D-12",desc:"5'x5' Area inlet (1 EA)",amt:5845.00},
+    {item:"D-16",desc:"10' curb inlet (19 EA)",amt:117325.00},
+    {item:"D-17",desc:"15' curb inlet (5 EA)",amt:46275.00},
+    {item:"D-17A",desc:"5' curb inlet (1 EA)",amt:6165.00},
+    {item:"D-18",desc:"Landscape Stub (2 EA)",amt:310.00},
+    {item:"D-20",desc:"5' Concrete Overflow Weir",amt:9055.00},
+    {item:"D-21",desc:"Level Spreader (70 LF)",amt:507.50},
+    {item:"D-22",desc:"3' Pilot Channel (389 LF)",amt:19450.00},
+    {item:"D&E-7",desc:"Dry stack retaining wall (1,169 FF)",amt:39161.50},
+    {item:"D&E-8",desc:"Structural retaining wall (1,658 FF)",amt:63418.50}
+  ],
+  21:[],22:[],23:[],24:[],25:[],
+  27:[
+    {item:"A-1",desc:"Concrete washout area",amt:1065.00},
+    {item:"A-9",desc:"Haul off trash and debris",amt:20000.00}
+  ],
+  28:[
+    {item:"P-22",desc:"Prepare ROW for Turn Lane",amt:10885.00},
+    {item:"P-25",desc:'10" Lime Stabilization Turn Lane (378 SY)',amt:10584.00},
+    {item:"P-26",desc:"Traffic Control Allowance Turn Lane",amt:16805.00},
+    {item:"A-11",desc:"Traffic control plan (Williamson Co.)",amt:3805.00}
+  ],
+  31:[
+    {item:"P-6",desc:"Subgrade Prep (24,455 SY)",amt:61137.50},
+    {item:"A-8s",desc:"Erosion control maintenance (Street share)",amt:1753.52},
+    {item:"A-16sg",desc:"Material & density testing (Street 12%)",amt:10685.40}
+  ],
+  32:[
+    {item:"P-6c",desc:"8\" crushed limestone base (4,797 SY)",amt:43173.00},
+    {item:"P-6d",desc:"10\" crushed limestone base (19,658 SY)",amt:245725.00},
+    {item:"A-16sb",desc:"Material & density testing (Street 10.5%)",amt:9349.72}
+  ],
+  33:[
+    {item:"P-9",desc:'4" roll curb and gutter (11,383 LF)',amt:227660.00},
+    {item:"P-10",desc:"Saw Tooth Curb (80 LF)",amt:4480.00},
+    {item:"P-10A",desc:"Type 2 Driveways at Entrances (2 EA)",amt:27540.00}
+  ],
+  35:[
+    {item:"Note",desc:"Backfill labor included in curb/gutter unit price. Earthwork equipment allocated from site grading.",amt:0}
+  ],
+  36:[
+    {item:"P-6c",desc:"8\" crushed limestone 2nd lift (included in 1st Course Base total)",amt:0},
+    {item:"Note",desc:"2nd Course quantity included in ID 32 total. Tracked separately for schedule purposes.",amt:0}
+  ],
+  37:[
+    {item:"P-6e",desc:"5\" Portland Cement Concrete (0 SY bid)",amt:0},
+    {item:"Note",desc:"Finish base trimming/grading included in base course unit prices.",amt:0}
+  ],
+  38:[
+    {item:"D-19",desc:"Fine grading lots/pads - included in storm drainage spoils",amt:0},
+    {item:"P-1/P-3",desc:"Final grading ROW - incidental per bid",amt:0},
+    {item:"Note",desc:"Fine Grade Pads labor included in earthwork and drainage unit prices per bid notes.",amt:0}
+  ],
+  39:[
+    {item:"D-11",desc:"Vertical adjustment drainage manholes (15 EA)",amt:6075.00},
+    {item:"S-5",desc:"Vertical adjustment sewer manholes (27 EA)",amt:12960.00}
+  ],
+  40:[
+    {item:"P-20",desc:"Utility adjustments and coordination",amt:975.00},
+    {item:"P-21",desc:"Paving construction staking",amt:7000.00}
+  ],
+  41:[
+    {item:"P-6a",desc:"2\" HMAC Surface Course Ty D (2,984 SY)",amt:47744.00},
+    {item:"P-6b",desc:"2.5\" HMAC Surface Course Ty D (14,502 SY)",amt:275538.00},
+    {item:"P-23",desc:"22\" Limestone Base Turn Lane (378 SY)",amt:20790.00},
+    {item:"P-24",desc:"2\" Type D HMAC Turn Lane (286 SY)",amt:13299.00},
+    {item:"P-27",desc:"Striping for Turn Lane",amt:10525.00},
+    {item:"P-17",desc:"Fire lane Striping",amt:11995.00},
+    {item:"P-11",desc:"Pavement connect to existing (2 EA)",amt:850.00},
+    {item:"P-12",desc:"Stop signs & street signs (28 EA)",amt:24500.00},
+    {item:"P-13",desc:"Street sign blades (1 EA)",amt:170.00},
+    {item:"P-14",desc:"No outlet sign w/ post (4 EA)",amt:2140.00},
+    {item:"P-15",desc:"No outlet sign blade (11 EA)",amt:1870.00},
+    {item:"P-16",desc:"Blue reflectorized traffic buttons (9 EA)",amt:153.00},
+    {item:"A-16sp",desc:"Material & density testing (Street 7.5%)",amt:6678.38}
+  ],
+  43:[
+    {item:"A-8c",desc:"Erosion control maintenance (Close Out share)",amt:964.44}
+  ],
+  45:[
+    {item:"D&E-9",desc:"Broadcast seed (10,109 SY)",amt:15163.50}
+  ]
+};
+
+function taskCost(id){
+  if(!COST_ITEMS[id])return 0;
+  return COST_ITEMS[id].reduce((s,i)=>s+i.amt,0);
+}
+
+const tasks=[
+  // PHASE 1: PRECONSTRUCTION ACTIVITY
+  {type:"phase",wbs:"0.0",name:"Preconstruction Activity",phaseKey:"p0"},
+  {id:3,wbs:"0.1",name:"Internal Precon",consultant:"AIG",ck:"owner",ps:D(3,17),pe:D(3,17),as:D(3,17),ae:D(3,17),status:"COMPLETE",bt:"milestone",pred:[],notes:"Internal preconstruction kickoff. Milestone marking project start.",source:"Schedule 4/1/26",phase:"p0",dur:0,cp:false},
+  {id:4,wbs:"0.2",name:"Erosion Controls",consultant:"JL Gray",ck:"gc",ps:D(3,19),pe:D(3,23),as:D(3,19),ae:D(3,23),status:"COMPLETE",bt:"complete",pred:[3],notes:"SWPPP erosion controls installed. 3-day duration. Required before any land disturbance.",source:"Schedule 4/1/26",phase:"p0",dur:3,cp:false},
+  {id:5,wbs:"0.3",name:"Manhole Lead Time 4 Weeks",consultant:"JL Gray",ck:"gc",ps:D(3,26),pe:D(4,22),as:D(3,26),ae:null,status:"IN PROGRESS",bt:"inprogress",pred:[3],notes:"4-week lead time for precast manhole procurement. 27 sanitary sewer manholes + 15 storm manholes. Must arrive before wet utility installation begins.",source:"Schedule 4/1/26",phase:"p0",dur:24,cp:false},
+  {id:6,wbs:"0.4",name:"Contract",consultant:"AIG/JL Gray",ck:"owner",ps:D(4,3),pe:D(4,3),as:D(4,3),ae:D(4,3),status:"COMPLETE",bt:"milestone",pred:[3],notes:"Contract execution milestone. NTP issued 4/3/2026.",source:"Schedule 4/1/26",phase:"p0",dur:0,cp:false},
+
+  // PHASE 2: EARTHWORK
+  {type:"phase",wbs:"1.0",name:"Earthwork",phaseKey:"p1"},
+  {id:8,wbs:"1.1",name:"Clear, Grind & Haul",consultant:"JL Gray",ck:"gc",ps:D(4,3),pe:D(4,6),as:D(4,3),ae:null,status:"IN PROGRESS",bt:"inprogress",pred:[6],notes:"Site clearing, grinding, and hauling. 3-day duration. First activity after contract execution.",source:"Schedule 4/1/26",phase:"p1",projEnd:D(4,6),dur:3,cp:true},
+  {id:9,wbs:"1.2",name:"Excavation",consultant:"JL Gray",ck:"gc",ps:D(4,6),pe:D(4,28),as:null,ae:null,status:"PENDING",bt:"pending",pred:[8],notes:"20-day mass excavation. Includes lot excavation (9,657 CY), pond excavation (9,226 CY), roadway excavation, and off-site disposal (6,005 CY).",source:"Schedule 4/1/26",phase:"p1",dur:20,cp:true},
+  {id:10,wbs:"1.3",name:"Embankment",consultant:"JL Gray",ck:"gc",ps:D(4,6),pe:D(4,28),as:null,ae:null,status:"PENDING",bt:"pending",pred:[8],notes:"20-day embankment. Includes lot fill (28,002 CY), pond embankment, and roadway embankment. Runs parallel with excavation.",source:"Schedule 4/1/26",phase:"p1",dur:20,cp:true},
+  {id:11,wbs:"1.4",name:"Moisture Condition Pads",consultant:"JL Gray",ck:"gc",ps:D(4,29),pe:D(5,21),as:null,ae:null,status:"PENDING",bt:"pending",pred:[9,10],notes:"20-day moisture conditioning of building pads. Lot fill (19,310 CY) and pond (6,633 CY). Must complete before fine grading.",source:"Schedule 4/1/26",phase:"p1",dur:20,cp:false},
+
+  // PHASE 3: WET UTILITIES
+  {type:"phase",wbs:"2.0",name:"Wet Utilities",phaseKey:"p2"},
+  {id:13,wbs:"2.1",name:"Trenching",consultant:"JL Gray",ck:"gc",ps:D(4,24),pe:D(6,1),as:null,ae:null,status:"PENDING",bt:"pending",pred:[8],notes:"31-day utility trenching for all wet utilities (storm, water, wastewater). Longest single activity in wet utilities phase. Trench safety costs allocated here.",source:"Schedule 4/1/26",phase:"p2",dur:31,cp:true},
+  {id:14,wbs:"2.2",name:"Wastewater*",consultant:"JL Gray (Sub)",ck:"gc",ps:D(5,18),pe:D(6,12),as:null,ae:null,status:"PENDING",bt:"pending",pred:[13],notes:"21-day wastewater installation. 6\" and 8\" PVC SDR-26 sewer pipe, 27 manholes, 150 services (100 single + 50 double). Includes CoRR manhole connection.",source:"Schedule 4/1/26",phase:"p2",dur:21,cp:true},
+  {id:15,wbs:"2.3",name:"Water*",consultant:"JL Gray (Sub)",ck:"gc",ps:D(6,13),pe:D(6,30),as:null,ae:null,status:"PENDING",bt:"pending",pred:[14],notes:"15-day water line installation. 2\", 6\", 8\" PVC C-900 waterlines, 9 fire hydrants, 48 gate valves, 150 services, meter, backflow preventer. 16\" wet connect to existing main.",source:"Schedule 4/1/26",phase:"p2",dur:15,cp:true},
+  {id:16,wbs:"2.4",name:"Storm Sewer*",consultant:"JL Gray (Sub)",ck:"gc",ps:D(7,1),pe:D(7,16),as:null,ae:null,status:"PENDING",bt:"pending",pred:[15],notes:"12-day storm sewer installation. 18\"-42\" HDPE and 24\" RCP pipe, headwalls, riprap, pilot channel, overflow weir.",source:"Schedule 4/1/26",phase:"p2",dur:12,cp:true},
+  {id:17,wbs:"2.5",name:"Water Testing",consultant:"Jonah Water/JL Gray",ck:"gc",ps:D(7,1),pe:D(7,8),as:null,ae:null,status:"PENDING",bt:"pending",pred:[15],notes:"4-day water testing. Pressure tests and bacteriological sampling required by Jonah Water SUD before acceptance.",source:"Schedule 4/1/26",phase:"p2",dur:4,cp:false},
+  {id:18,wbs:"2.6",name:"Bac Tees",consultant:"Jonah Water/JL Gray",ck:"gc",ps:D(7,9),pe:D(7,11),as:null,ae:null,status:"PENDING",bt:"pending",pred:[17],notes:"3-day bacteriological testing. Required before water tie-ins can proceed.",source:"Schedule 4/1/26",phase:"p2",dur:3,cp:false},
+  {id:19,wbs:"2.7",name:"Water Tie-ins",consultant:"Jonah Water/JL Gray",ck:"gc",ps:D(7,13),pe:D(7,16),as:null,ae:null,status:"PENDING",bt:"pending",pred:[18],notes:"3-day water tie-in connections. Final connections to existing Jonah Water system.",source:"Schedule 4/1/26",phase:"p2",dur:3,cp:false},
+  {id:20,wbs:"2.8",name:"Structures",consultant:"JL Gray",ck:"gc",ps:D(7,17),pe:D(7,28),as:null,ae:null,status:"PENDING",bt:"pending",pred:[16,19],notes:"9-day drainage structures installation. 15 storm manholes (4'-7'), 25 curb inlets (5'-15'), area inlet, landscape stubs, overflow weir, level spreader, pilot channel. OFF CRITICAL PATH per JL Gray - headwalls, dissipators, and SETs are located outside the street and do not gate paving.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p2",dur:9,cp:false},
+
+  // PHASE 4: DRY UTILITIES (NOT IN CONTRACT)
+  {type:"phase",wbs:"3.0",name:"Dry Utilities (Not in Contract)",phaseKey:"p3"},
+  {id:21,wbs:"3.1",name:"Dry Utilities (Not in Contract)",consultant:"Utility Provider",ck:"utility",ps:D(5,12),pe:D(9,25),as:null,ae:null,status:"PENDING",bt:"pending",pred:[],notes:"118-day duration. NOT IN CONTRACT - dependent on utility provider schedule. Near-critical path with ~10-12 days of float. No cost to JL Gray contract.",source:"Schedule 4/1/26",phase:"p3",dur:118,cp:false,ncp:true},
+  {id:22,wbs:"3.2",name:"Dry Trenching (Pending Plans)",consultant:"Utility Provider",ck:"utility",ps:D(5,12),pe:D(6,4),as:null,ae:null,status:"PENDING",bt:"pending",pred:[13],notes:"20-day dry trenching. Linked to wet trenching (ID 13) per JL Gray - dry trenchers move in 14-20 days after wet utility trenching starts. Pending approved plans from utility provider. No cost to JL Gray contract.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p3",dur:20,cp:false,ncp:true},
+  {id:23,wbs:"3.3",name:"Crossings",consultant:"Utility Provider",ck:"utility",ps:D(7,22),pe:D(8,1),as:null,ae:null,status:"PENDING",bt:"pending",pred:[22],notes:"10-day dry utility crossings. CRITICAL PATH per JL Gray - must be installed before street construction can proceed. Coordination with wet utilities required.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p3",dur:10,cp:true},
+  {id:24,wbs:"3.4",name:"Main",consultant:"Utility Provider",ck:"utility",ps:D(8,3),pe:D(9,4),as:null,ae:null,status:"PENDING",bt:"pending",pred:[23],notes:"30-day main dry utility installation.",source:"Schedule 4/1/26",phase:"p3",dur:30,cp:false},
+  {id:25,wbs:"3.5",name:"Transformer Pads",consultant:"Utility Provider",ck:"utility",ps:D(9,8),pe:D(9,25),as:null,ae:null,status:"PENDING",bt:"pending",pred:[24],notes:"15-day transformer pad installation. Last activity in dry utility phase.",source:"Schedule 4/1/26",phase:"p3",dur:15,cp:false},
+
+  // PHASE 5: STREET CONSTRUCTION
+  {type:"phase",wbs:"4.0",name:"Street Construction",phaseKey:"p4"},
+  {id:27,wbs:"4.1",name:"Utility Spoils Cleanup",consultant:"JL Gray",ck:"gc",ps:D(7,17),pe:D(7,21),as:null,ae:null,status:"PENDING",bt:"pending",pred:[16],notes:"3-day cleanup after wet utility work. Concrete washout area and debris removal. Predecessor updated from Structures (20) to Storm Sewer (16) since structures are outside street per JL Gray.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p4",dur:3,cp:true},
+  {id:28,wbs:"4.2",name:"Subgrade Prep - Lime (Turn Lane)",consultant:"JL Gray",ck:"gc",ps:D(8,3),pe:D(8,5),as:null,ae:null,status:"PENDING",bt:"pending",pred:[27,23],notes:"2-day subgrade prep and lime stabilization for Limmer Loop Turn Lane. Includes ROW preparation, 10\" lime stabilization, and traffic control. Dry utility crossings (23) must be complete before street construction per JL Gray.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p4",dur:2,cp:true},
+  {id:29,wbs:"4.3",name:"Process Lime - First Mix (Turn Lane)",consultant:"JL Gray",ck:"gc",ps:D(8,6),pe:D(8,8),as:null,ae:null,status:"PENDING",bt:"pending",pred:[28],notes:"2-day first lime mix processing for turn lane.",source:"Schedule 4/1/26",phase:"p4",dur:2,cp:false},
+  {id:30,wbs:"4.4",name:"Process Lime - Second Mix (Turn Lane)",consultant:"JL Gray",ck:"gc",ps:D(8,10),pe:D(8,12),as:null,ae:null,status:"PENDING",bt:"pending",pred:[29],notes:"2-day second lime mix processing for turn lane.",source:"Schedule 4/1/26",phase:"p4",dur:2,cp:false},
+  {id:31,wbs:"4.5",name:"Subgrade Prep",consultant:"JL Gray",ck:"gc",ps:D(8,5),pe:D(8,18),as:null,ae:null,status:"PENDING",bt:"pending",pred:[28],notes:"12-day subgrade preparation for all roadways. 24,455 SY at $2.50/SY.",source:"Schedule 4/1/26",phase:"p4",dur:12,cp:true},
+  {id:32,wbs:"4.6",name:"1st Course Base",consultant:"JL Gray",ck:"gc",ps:D(8,19),pe:D(8,26),as:null,ae:null,status:"PENDING",bt:"pending",pred:[31],notes:"6-day first course base installation. 8\" crushed limestone (4,797 SY) and 10\" crushed limestone (19,658 SY).",source:"Schedule 4/1/26",phase:"p4",dur:6,cp:true},
+  {id:33,wbs:"4.7",name:"Curb and Gutter",consultant:"JL Gray",ck:"gc",ps:D(8,24),pe:D(9,1),as:null,ae:null,status:"PENDING",bt:"pending",pred:[32],notes:"7-day curb and gutter installation. 11,383 LF of 4\" roll curb, 80 LF saw tooth curb, 2 Type 2 driveways.",source:"Schedule 4/1/26",phase:"p4",dur:7,cp:true},
+  {id:34,wbs:"4.8",name:"Tie-ins and Inlet Tops",consultant:"JL Gray",ck:"gc",ps:D(9,2),pe:D(9,9),as:null,ae:null,status:"PENDING",bt:"pending",pred:[33],notes:"5-day utility tie-ins and inlet top installation. CRITICAL PATH per JL Gray - covers handwork by concrete subcontractor for curb, gutter, and inlets. Must complete before 2nd Course Base.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p4",dur:5,cp:true},
+  {id:35,wbs:"4.9",name:"Backfill Curb",consultant:"JL Gray",ck:"gc",ps:D(8,28),pe:D(9,11),as:null,ae:null,status:"PENDING",bt:"pending",pred:[33],notes:"11-day curb backfill. Labor included in curb/gutter unit prices.",source:"Schedule 4/1/26",phase:"p4",dur:11,cp:true},
+  {id:36,wbs:"4.10",name:"2nd Course Base",consultant:"JL Gray",ck:"gc",ps:D(9,9),pe:D(9,14),as:null,ae:null,status:"PENDING",bt:"pending",pred:[34,35],notes:"4-day second course base. Quantity included in 1st Course Base bid totals; tracked separately for schedule sequencing.",source:"Schedule 4/1/26",phase:"p4",dur:4,cp:true},
+  {id:37,wbs:"4.11",name:"Finish Base",consultant:"JL Gray",ck:"gc",ps:D(9,15),pe:D(9,25),as:null,ae:null,status:"PENDING",bt:"pending",pred:[36],notes:"9-day finish base preparation. Final trimming and grading of base surface prior to paving.",source:"Schedule 4/1/26",phase:"p4",dur:9,cp:true},
+  {id:38,wbs:"4.12",name:"Fine Grade Pads",consultant:"JL Gray",ck:"gc",ps:D(9,26),pe:D(10,7),as:null,ae:null,status:"PENDING",bt:"pending",pred:[37],notes:"10-day fine grading of building pads. Final grade for vertical construction readiness. Labor included in earthwork/drainage unit prices per bid notes.",source:"Schedule 4/1/26",phase:"p4",dur:10,cp:true},
+  {id:39,wbs:"4.13",name:"Raise Castings",consultant:"JL Gray",ck:"gc",ps:D(9,25),pe:D(9,30),as:null,ae:null,status:"PENDING",bt:"pending",pred:[37],notes:"5-day raising of manholes and castings to final grade. 15 drainage MH + 27 sewer MH vertical adjustments.",source:"Schedule 4/1/26",phase:"p4",dur:5,cp:true},
+  {id:40,wbs:"4.14",name:"Prepave",consultant:"JL Gray",ck:"gc",ps:D(10,1),pe:D(10,2),as:null,ae:null,status:"PENDING",bt:"pending",pred:[38,39],notes:"1-day pre-pave preparation. Utility adjustments, construction staking, final checks.",source:"Schedule 4/1/26",phase:"p4",dur:1,cp:true},
+  {id:41,wbs:"4.15",name:"Paving",consultant:"JL Gray",ck:"gc",ps:D(10,3),pe:D(10,5),as:null,ae:null,status:"PENDING",bt:"pending",pred:[40],notes:"1-day paving. 2\" and 2.5\" HMAC surface course for all roads, turn lane base and HMAC, fire lane striping, signage, pavement connections.",source:"Schedule 4/1/26",phase:"p4",dur:1,cp:true},
+
+  // PHASE 6: CLOSE OUT
+  {type:"phase",wbs:"5.0",name:"Close Out",phaseKey:"p5"},
+  {id:43,wbs:"5.1",name:"Clean Up",consultant:"JL Gray",ck:"gc",ps:D(10,6),pe:D(10,14),as:null,ae:null,status:"PENDING",bt:"pending",pred:[41],notes:"7-day site cleanup after paving completion.",source:"Schedule 4/1/26",phase:"p5",dur:7,cp:false},
+  {id:44,wbs:"5.2",name:"Signs and Striping",consultant:"JL Gray",ck:"gc",ps:D(10,15),pe:D(10,17),as:null,ae:null,status:"PENDING",bt:"pending",pred:[43],notes:"3-day signage and striping installation.",source:"Schedule 4/1/26",phase:"p5",dur:3,cp:false},
+  {id:45,wbs:"5.3",name:"Reveg",consultant:"JL Gray",ck:"gc",ps:D(10,15),pe:D(10,20),as:null,ae:null,status:"PENDING",bt:"pending",pred:[43],notes:"5-day revegetation. Broadcast seed (19.33 Ac).",source:"Schedule 4/1/26",phase:"p5",dur:5,cp:false},
+  {id:46,wbs:"5.4",name:"Walk Through",consultant:"All Parties",ck:"owner",ps:D(10,21),pe:D(10,21),as:null,ae:null,status:"PENDING",bt:"milestone",pred:[44,45],notes:"Walk-through inspection milestone. All close-out activities must be complete.",source:"Schedule 4/1/26",phase:"p5",dur:0,cp:false},
+  {id:47,wbs:"5.5",name:"Punchlist",consultant:"JL Gray",ck:"gc",ps:D(10,22),pe:D(10,28),as:null,ae:null,status:"PENDING",bt:"pending",pred:[46],notes:"5-day punchlist completion after walk-through.",source:"Schedule 4/1/26",phase:"p5",dur:5,cp:false},
+  {id:48,wbs:"5.6",name:"Acceptance",consultant:"All Parties",ck:"owner",ps:D(10,28),pe:D(11,19),as:null,ae:null,status:"PENDING",bt:"pending",pred:[47],notes:"20-day final acceptance period. Project completion target.",source:"Schedule 4/1/26",phase:"p5",dur:20,cp:false},
+
+  // MILESTONE
+  {type:"phase",wbs:"M",name:"Milestone",phaseKey:"pm"},
+  {id:99,wbs:"M.1",name:"READY FOR VERTICAL CONSTRUCTION",consultant:"All Parties",ck:"owner",ps:D(10,5),pe:D(10,5),as:null,ae:null,status:"TARGET: 10/5/2026",bt:"milestone",pred:[41],notes:"Target date for horizontal site work completion. All paving, utilities, and grading must be complete before vertical (building) construction can begin.",source:"Schedule 4/1/26",phase:"pm",dur:0,cp:true}
+];
+
+// State
+const collapsedPhases={};
+let activeStatus=null,critPathActive=false,costBarsActive=false,depsActive=false;
+const taskProgress={}; // {taskId: {pct: 0-100, daysLeft: N, projEnd: Date}}
+const linkLag={}; // {"predId_succId": lagDays} positive=delay, negative=lead (overlap)
+function getLag(predId,succId){return linkLag[predId+'_'+succId]||0;}
+function setLag(predId,succId,days){linkLag[predId+'_'+succId]=days;}
+
+// Utilities
+function dayPos(d){return Math.max(0,Math.ceil((d-START_DATE)/864e5))}
+function fmtDate(d){return d?(d.getMonth()+1)+"/"+d.getDate()+"/"+d.getFullYear():"TBD"}
+function fmtDateISO(d){if(!d)return'';return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fmtCost(n){return n===0?"$0":"$"+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}
+function fmtCostFull(n){return "$"+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function pipClass(s){
+  if(s==="COMPLETE"||s==="COMPLETE (LATE)")return"pip-complete";
+  if(s.includes("PROGRESS")||s==="ACTIVE"||s==="SUBST. COMPLETE")return"pip-inprogress";
+  if(s.includes("PENDING")||s.includes("TARGET")||s.includes("TBD"))return"pip-pending";
+  if(s.includes("BLOCKED")||s.includes("ACTION"))return"pip-blocked";
+  return"pip-pending";
+}
+function statusCat(s){
+  if(s==="COMPLETE"||s==="COMPLETE (LATE)")return"complete";
+  if(s.includes("PROGRESS")||s==="ACTIVE"||s==="SUBST. COMPLETE")return"inprogress";
+  if(s.includes("PENDING")||s.includes("TARGET")||s.includes("TBD"))return"pending";
+  if(s.includes("BLOCKED")||s.includes("ACTION"))return"blocked";
+  return"pending";
+}
+function isCritical(id){return CRITICAL_PATH.includes(id)||id===99}
+function isNearCrit(id){return NEAR_CRITICAL.includes(id)}
+function getTask(id){return tasks.find(t=>t.id===id)}
+function getSuccessors(id){return tasks.filter(t=>t.pred&&t.pred.includes(id))}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+// Float calculation
+function daysToTarget(t){
+  const end=t.ae||t.projEnd||t.pe;
+  if(!end)return null;
+  return Math.ceil((TARGET_DATE-end)/864e5);
+}
+
+// Phase cost totals
+function phaseCost(pk){
+  return tasks.filter(t=>!t.type&&t.phase===pk).reduce((s,t)=>s+taskCost(t.id),0);
+}
+
+// Alert system
+function computeAlerts(){
+  const alerts=[];
+  tasks.forEach((t,idx)=>{
+    if(t.type)return;
+    const cat=statusCat(t.status);
+    if(cat==='complete')return;
+    const end=t.ae||t.projEnd||t.pe;
+    if(!end)return;
+    const daysLeft=Math.ceil((end-TODAY)/864e5);
+    if(daysLeft<0){
+      alerts.push({idx,task:t,type:'overdue',severity:3,days:Math.abs(daysLeft),msg:'Overdue by '+Math.abs(daysLeft)+' days'});
+    }else if(daysLeft<=7){
+      alerts.push({idx,task:t,type:'atrisk',severity:2,days:daysLeft,msg:daysLeft===0?'Due today':'Due in '+daysLeft+' days'});
+    }
+    if((cat==='blocked')&&daysLeft<=14){
+      alerts.push({idx,task:t,type:'blocked',severity:2.5,days:daysLeft,msg:'Blocked - target in '+daysLeft+' days'});
+    }
+  });
+  alerts.sort((a,b)=>{
+    const ac=isCritical(a.task.id)?1:0,bc=isCritical(b.task.id)?1:0;
+    if(bc!==ac)return bc-ac;
+    if(b.severity!==a.severity)return b.severity-a.severity;
+    return a.days-b.days;
+  });
+  return alerts;
+}
+
+function updateAlertBadge(){
+  const alerts=computeAlerts();
+  const badge=document.getElementById('alertBadge');
+  const count=document.getElementById('alertCount');
+  count.textContent=alerts.length;
+  if(alerts.length>0){
+    badge.className='alert-badge has-alerts';
+  }else{
+    badge.className='alert-badge no-alerts';
+  }
+}
+
+function getAlertForTask(taskId){
+  const alerts=computeAlerts();
+  return alerts.find(a=>a.task.id===taskId);
+}
+
+function toggleAlerts(){
+  const dd=document.getElementById('alertDropdown');
+  if(dd.classList.contains('open')){dd.classList.remove('open');return}
+  const alerts=computeAlerts();
+  let h='<div class="alert-tabs">';
+  h+='<div class="alert-tab active" onclick="filterAlerts(\'all\',this)">All ('+alerts.length+')</div>';
+  const overdue=alerts.filter(a=>a.type==='overdue').length;
+  const atrisk=alerts.filter(a=>a.type==='atrisk').length;
+  const blocked=alerts.filter(a=>a.type==='blocked').length;
+  h+='<div class="alert-tab" onclick="filterAlerts(\'overdue\',this)">Overdue ('+overdue+')</div>';
+  h+='<div class="alert-tab" onclick="filterAlerts(\'atrisk\',this)">At Risk ('+atrisk+')</div>';
+  h+='<div class="alert-tab" onclick="filterAlerts(\'blocked\',this)">Blocked ('+blocked+')</div>';
+  h+='</div><div class="alert-list" id="alertList">';
+  if(alerts.length===0){
+    h+='<div style="padding:24px;text-align:center;color:var(--text-dim)">No alerts - all clear!</div>';
+  }
+  alerts.forEach(a=>{
+    const icon=a.type==='overdue'?'&#9888;':a.type==='blocked'?'&#9940;':'&#128339;';
+    const tagClass=a.type==='overdue'?'tag-overdue':a.type==='blocked'?'tag-blocked':'tag-atrisk';
+    h+='<div class="alert-item" data-atype="'+a.type+'" onclick="document.getElementById(\'alertDropdown\').classList.remove(\'open\');openPanel('+a.idx+')">';
+    h+='<div class="alert-icon">'+icon+'</div>';
+    h+='<div class="alert-info"><strong>'+a.task.name+'</strong> <span class="mono" style="font-size:10px;color:var(--text-light)">'+a.task.wbs+'</span><br>';
+    h+='<span class="alert-tag '+tagClass+'">'+a.type.toUpperCase().replace('ATRISK','AT RISK')+'</span>';
+    if(isCritical(a.task.id))h+='<span class="alert-tag tag-cp">CP</span>';
+    h+=' <span style="font-size:11px;color:var(--text-dim)">'+a.msg+'</span>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  dd.innerHTML=h;
+  dd.classList.add('open');
+}
+function filterAlerts(type,el){
+  document.querySelectorAll('.alert-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.alert-item').forEach(item=>{
+    item.style.display=(type==='all'||item.dataset.atype===type)?'flex':'none';
+  });
+}
+
+// Render
+function renderGantt(){
+  const g=document.getElementById('gantt');
+  const tw=TOTAL_DAYS*DAY_W;
+  let h='';
+
+  // Header
+  h+='<div class="gantt-header"><div class="gantt-header-label"></div><div class="gantt-header-timeline" style="width:'+tw+'px;position:relative">';
+  let md=new Date(START_DATE);
+  const mnames=['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+  while(md<END_DATE){
+    const me=new Date(md.getFullYear(),md.getMonth()+1,0);
+    const vs=md<START_DATE?START_DATE:md;
+    const ve=me>END_DATE?END_DATE:me;
+    const l=dayPos(vs)*DAY_W,w=(dayPos(ve)-dayPos(vs)+1)*DAY_W;
+    h+='<div class="month-bar" style="left:'+l+'px;width:'+w+'px">'+mnames[md.getMonth()]+' '+md.getFullYear()+'</div>';
+    md=new Date(md.getFullYear(),md.getMonth()+1,1);
+  }
+  let wd=new Date(START_DATE);
+  while(wd<END_DATE){
+    const l=dayPos(wd)*DAY_W;
+    const we=new Date(wd.getTime()+6*864e5);
+    const tw2=TODAY>=wd&&TODAY<=we;
+    h+='<div class="week-bar'+(tw2?' today-week':'')+'" style="left:'+l+'px;width:'+(7*DAY_W)+'px">'+(wd.getMonth()+1)+'/'+wd.getDate()+'</div>';
+    wd=new Date(wd.getTime()+7*864e5);
+  }
+  h+='</div></div>';
+
+  // Rows
+  tasks.forEach((t,idx)=>{
+    if(t.type==="phase"){
+      const col=collapsedPhases[t.phaseKey];
+      const pc=phaseCost(t.phaseKey);
+      h+='<div class="gantt-row phase-row" data-phase="'+t.phaseKey+'" onclick="togglePhase(\''+t.phaseKey+'\')">';
+      h+='<div class="row-label" style="color:#fff"><span class="phase-toggle'+(col?' collapsed':'')+'">&#9660;</span>';
+      h+='<span class="wbs" style="color:rgba(255,255,255,.6)">'+t.wbs+'</span>';
+      h+='<span class="task-name">'+t.name+'</span>';
+      if(pc>0)h+='<span class="phase-cost">'+fmtCost(pc)+'</span>';
+      h+='</div><div class="row-timeline" style="width:'+tw+'px"></div></div>';
+      return;
+    }
+    if(collapsedPhases[t.phase])return;
+    if(critPathActive&&!isCritical(t.id)&&!isNearCrit(t.id))return;
+    if(activeStatus&&statusCat(t.status)!==activeStatus)return;
+
+    const crit=isCritical(t.id);
+    const ncp=isNearCrit(t.id)||(t.ncp===true);
+    const cost=taskCost(t.id);
+    let rc='gantt-row';
+    if(crit)rc+=' critical-row';
+
+    h+='<div class="'+rc+'" data-id="'+t.id+'" onclick="openPanel('+idx+')">';
+    h+='<div class="row-label">';
+    h+='<span class="wbs mono">'+t.wbs+'</span>';
+    h+='<span class="task-name'+(crit?' critical-name':'')+'">'+t.name+'</span>';
+    h+='<span class="dur-val mono">'+t.dur+'d</span>';
+    h+='<span class="cost-val mono" style="min-width:75px;text-align:right;font-size:10px;font-weight:600;color:'+(cost>0?'var(--complete)':'var(--text-light)')+'">'+fmtCost(cost)+'</span>';
+    h+='<span class="status-pip '+pipClass(t.status)+' mono">'+t.status+'</span>';
+    if(crit)h+='<span style="font-size:9px;color:var(--critical);font-weight:700;margin-left:2px">CP</span>';
+    if(ncp)h+='<span style="font-size:9px;color:#d97706;font-weight:700;margin-left:2px">NCP</span>';
+
+    // Projected shift indicator (operating end vs base end)
+    const opEndShift=t.ae||t.projEnd;
+    if(opEndShift&&t.pe){
+      const shift=Math.ceil((opEndShift-t.pe)/864e5);
+      if(shift>0)h+='<span style="font-size:9px;font-weight:700;color:var(--critical);font-family:JetBrains Mono,monospace;margin-left:2px;background:#fee2e2;padding:0 4px;border-radius:2px">+'+shift+'d</span>';
+      if(shift<0)h+='<span style="font-size:9px;font-weight:700;color:#16a34a;font-family:JetBrains Mono,monospace;margin-left:2px;background:#f0fdf4;padding:0 4px;border-radius:2px">'+shift+'d</span>';
+    }
+
+    // Float badge
+    const scat=statusCat(t.status);
+    if(scat!=='complete'&&t.bt!=='milestone'){
+      const flt=daysToTarget(t);
+      if(flt!==null){
+        let fc='float-ok';
+        if(flt<=21)fc='float-warn';
+        if(flt<=0)fc='float-critical';
+        h+='<span class="float-badge '+fc+'">'+flt+'d</span>';
+      }
+    }
+
+    // Alert inline indicator
+    const alert=getAlertForTask(t.id);
+    if(alert){
+      if(alert.type==='overdue')h+='<span class="alert-inline overdue" title="Overdue">&#9888;</span>';
+      else if(alert.type==='atrisk')h+='<span class="alert-inline at-risk" title="At Risk">&#128339;</span>';
+    }
+
+    h+='</div>';
+
+    // Timeline
+    h+='<div class="row-timeline" style="width:'+tw+'px;position:relative">';
+    const tl=dayPos(TODAY)*DAY_W;
+    h+='<div class="today-line" style="left:'+tl+'px"></div>';
+
+    // Operating dates: actual > projected > base (planned)
+    const opStart=t.as||t.projStart||t.ps;
+    const opEnd=t.ae||t.projEnd||t.pe;
+    // Base dates for ghost bar reference
+    const baseS=t.ps, baseE=t.pe;
+    if(opStart&&opEnd){
+      if(t.bt==="milestone"){
+        const mPos=dayPos(opEnd)*DAY_W;
+        h+='<div class="bar bar-milestone'+(crit?' critical-bar':'')+'" style="left:'+mPos+'px"></div>';
+      }else{
+        const shifted=opStart.getTime()!==baseS.getTime()||opEnd.getTime()!==baseE.getTime();
+        const shiftDir=opEnd>baseE?1:(opEnd<baseE?-1:0);
+
+        // Ghost bar showing base plan if dates have shifted
+        if(shifted){
+          const bl=dayPos(baseS)*DAY_W, bw=Math.max(6,(dayPos(baseE)-dayPos(baseS))*DAY_W);
+          h+='<div style="position:absolute;left:'+bl+'px;width:'+bw+'px;height:14px;top:50%;transform:translateY(-50%);background:rgba(148,163,184,.2);border:1px dashed rgba(148,163,184,.5);border-radius:3px"></div>';
+        }
+
+        // Active bar at operating dates
+        const ol=dayPos(opStart)*DAY_W, ow=Math.max(6,(dayPos(opEnd)-dayPos(opStart))*DAY_W);
+        let bc='bar bar-'+t.bt;
+        if(crit)bc+=' critical-bar';
+        h+='<div class="'+bc+'" style="left:'+ol+'px;width:'+ow+'px'+(shiftDir<0?';border:2px solid #16a34a':'')+(shiftDir>0?';border:2px solid var(--critical)':'')+'" data-taskid="'+t.id+'">';
+        if(costBarsActive&&cost>0){
+          h+='<span class="bar-cost-label">'+fmtCost(cost)+'</span>';
+        }
+        h+='</div>';
+
+        // Delay extension hatch (operating end past base end)
+        if(opEnd>baseE){
+          const delayL=dayPos(baseE)*DAY_W;
+          const delayW=Math.max(2,(dayPos(opEnd)-dayPos(baseE))*DAY_W);
+          h+='<div style="position:absolute;left:'+delayL+'px;width:'+delayW+'px;height:18px;top:50%;transform:translateY(-50%);background:repeating-linear-gradient(90deg,rgba(220,38,38,.3),rgba(220,38,38,.3) 4px,rgba(220,38,38,.15) 4px,rgba(220,38,38,.15) 8px);border:1px dashed var(--critical);border-radius:2px"></div>';
+        }
+
+        // Pull-in hatch (operating end before base end)
+        if(opEnd<baseE){
+          const pullL=dayPos(opEnd)*DAY_W;
+          const pullW=Math.max(2,(dayPos(baseE)-dayPos(opEnd))*DAY_W);
+          h+='<div style="position:absolute;left:'+pullL+'px;width:'+pullW+'px;height:18px;top:50%;transform:translateY(-50%);background:repeating-linear-gradient(90deg,rgba(22,163,74,.2),rgba(22,163,74,.2) 4px,rgba(22,163,74,.08) 4px,rgba(22,163,74,.08) 8px);border:1px dashed #16a34a;border-radius:2px"></div>';
+        }
+      }
+    }
+    h+='</div></div>';
+  });
+  g.innerHTML=h;
+  updateCounts();
+  updateCostBar();
+  updateDelayBar();
+  updateAlertBadge();
+  if(depsActive)drawDependencies();
+}
+
+// Master render function
+let _initialized=false;
+function render(){
+  renderGantt();
+  renderSummary();
+  if(_initialized)autoSave();
+}
+
+function togglePhase(k){collapsedPhases[k]=!collapsedPhases[k];renderGantt()}
+function toggleCriticalPath(){
+  critPathActive=!critPathActive;
+  document.getElementById('critPathBtn').classList.toggle('active-critical',critPathActive);
+  if(critPathActive)activeStatus=null;
+  updateStatusBtns();renderGantt();
+}
+function toggleCostBars(){
+  costBarsActive=!costBarsActive;
+  document.getElementById('costToggle').classList.toggle('active-accent',costBarsActive);
+  renderGantt();
+}
+function toggleDependencies(){
+  depsActive=!depsActive;
+  document.getElementById('depToggle').classList.toggle('active-accent',depsActive);
+  if(!depsActive){
+    const existing=document.querySelector('.dep-svg');
+    if(existing)existing.remove();
+  }
+  renderGantt();
+}
+function filterStatus(cat){
+  activeStatus=activeStatus===cat?null:cat;
+  critPathActive=false;
+  document.getElementById('critPathBtn').classList.remove('active-critical');
+  updateStatusBtns();renderGantt();
+}
+function updateStatusBtns(){
+  document.querySelectorAll('#statusFilters .filter-btn').forEach(b=>{
+    b.classList.remove('active-accent');
+    if(activeStatus&&b.dataset.cat===activeStatus)b.classList.add('active-accent');
+  });
+}
+function updateCounts(){
+  const c={inprogress:0,pending:0,complete:0,blocked:0};
+  tasks.forEach(t=>{if(!t.type){const cat=statusCat(t.status);if(c[cat]!==undefined)c[cat]++}});
+  document.querySelectorAll('#statusFilters .filter-btn').forEach(b=>{
+    const cn=b.querySelector('.count');
+    if(cn)cn.textContent=c[b.dataset.cat]||0;
+  });
+}
+function updateCostBar(){
+  // Cost summary bar removed - data available in table view
+  const el=document.getElementById('totalCostChip');
+  if(el)el.textContent='Total Bid: '+fmtCost(TOTAL_BID);
+}
+
+// Delay cost bar - monthly cashflow model
+function updateDelayBar(){
+  const projectMonth=getCurrentProjectMonth();
+  const balance=getDrawBalanceAtDate(TODAY);
+  const dailyInt=dailyInterestAtDate(TODAY);
+
+  document.getElementById('currentPhaseLabel').textContent='Month '+projectMonth+' of 26';
+  document.getElementById('currentBalance').textContent=fmtCost(Math.round(balance));
+  document.getElementById('dailyInterest').textContent=fmtCost(Math.round(dailyInt));
+  document.getElementById('weeklyTotal').textContent=fmtCost(Math.round(dailyInt*7));
+
+  // Calculate schedule variance from Paving task (ID 41) - that's the project target
+  const pavingTask=getTask(41);
+  let pavingVariance=0;
+  if(pavingTask){
+    const pavEnd=pavingTask.ae||pavingTask.projEnd||pavingTask.pe;
+    if(pavEnd&&pavingTask.pe){
+      pavingVariance=Math.ceil((pavEnd-pavingTask.pe)/864e5);
+    }
+  }
+
+  // Also find which CP task has the worst individual variance (for the alert source)
+  let worstSlip=0;
+  let worstTaskName='';
+  tasks.forEach(t=>{
+    if(t.type||!isCritical(t.id))return;
+    const cat=statusCat(t.status);
+    if(cat==='complete')return;
+    const projEnd=t.ae||t.projEnd||t.pe;
+    if(!projEnd||!t.pe)return;
+    const slip=Math.ceil((projEnd-t.pe)/864e5);
+    if(Math.abs(slip)>Math.abs(worstSlip)||(slip>0&&slip>=worstSlip)){
+      worstSlip=slip;
+      worstTaskName=t.name;
+    }
+  });
+
+  const vEl=document.getElementById('currentVariance');
+  if(pavingVariance>0){
+    const delayCost=calculateDelayCost(pavingVariance);
+    vEl.innerHTML='+'+pavingVariance+'d delay<br><span style="font-size:11px;color:var(--critical)">Cost: '+fmtCost(Math.round(delayCost))+'</span>';
+    vEl.style.color='var(--critical)';
+    showDelayAlert(worstTaskName, worstSlip, delayCost);
+  }else if(pavingVariance<0){
+    const savedCost=calculateDelayCost(Math.abs(pavingVariance));
+    vEl.innerHTML=pavingVariance+'d ahead<br><span style="font-size:11px;color:var(--complete)">Savings: '+fmtCost(Math.round(savedCost))+'</span>';
+    vEl.style.color='var(--complete)';
+    showDelayAlert('',0,0);
+  }else{
+    vEl.textContent='On Schedule';
+    vEl.style.color='var(--complete)';
+    showDelayAlert('',0,0);
+  }
+}
+
+// Trace root cause of delay for a task - walks predecessors to find what changed
+function traceDelayCause(taskId){
+  const causes=[];
+  const visited=new Set();
+  function walk(id){
+    if(visited.has(id))return;
+    visited.add(id);
+    const t=getTask(id);
+    if(!t)return;
+    // Check if this task has a direct user-entered change
+    if(t.ae&&t.pe){
+      const slip=Math.ceil((t.ae-t.pe)/864e5);
+      if(slip>0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'actual_end',detail:'Actual end '+fmtDate(t.ae)+' vs base '+fmtDate(t.pe),days:slip});
+      if(slip<0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'actual_end',detail:'Finished early '+fmtDate(t.ae)+' vs base '+fmtDate(t.pe),days:slip});
+    }
+    if(t.as&&t.ps){
+      const slip=Math.ceil((t.as-t.ps)/864e5);
+      if(slip>0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'actual_start',detail:'Started late '+fmtDate(t.as)+' vs base '+fmtDate(t.ps),days:slip});
+    }
+    if(taskProgress[id]&&t.projEnd&&t.pe){
+      const slip=Math.ceil((t.projEnd-t.pe)/864e5);
+      if(slip>0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'progress',detail:taskProgress[id].pct+'% complete, '+taskProgress[id].daysLeft+'d remaining, proj. '+fmtDate(t.projEnd),days:slip});
+      if(slip<0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'progress',detail:taskProgress[id].pct+'% complete, proj. '+fmtDate(t.projEnd)+' (ahead)',days:slip});
+    }
+    // Check lag on links TO this task
+    if(t.pred){
+      t.pred.forEach(pId=>{
+        const lag=getLag(pId,id);
+        if(lag!==0){
+          const pt=getTask(pId);
+          causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'lag',detail:(lag>0?'+':'')+lag+'d lag on link from '+(pt?pt.name:'#'+pId),days:lag});
+        }
+        walk(pId);
+      });
+    }
+  }
+  walk(taskId);
+  // Deduplicate and sort: direct user changes first, then by severity
+  const unique=[];
+  const seen=new Set();
+  causes.forEach(c=>{
+    const key=c.id+'_'+c.type;
+    if(!seen.has(key)){seen.add(key);unique.push(c);}
+  });
+  unique.sort((a,b)=>Math.abs(b.days)-Math.abs(a.days));
+  return unique;
+}
+
+// Show/hide delay alert banner
+function showDelayAlert(taskName, delayDays, delayCost){
+  let alertBanner=document.getElementById('delayAlertBanner');
+  if(!alertBanner&&delayDays>0){
+    alertBanner=document.createElement('div');
+    alertBanner.id='delayAlertBanner';
+    alertBanner.style.cssText='position:sticky;top:152px;z-index:97;background:#fee2e2;border-bottom:2px solid #ef4444;padding:12px 16px;color:#991b1b;font-size:13px;font-weight:600;margin:0';
+    const delayBar=document.getElementById('delayBar');
+    delayBar.parentNode.insertBefore(alertBanner,delayBar.nextSibling);
+  }
+  if(alertBanner){
+    if(delayDays>0){
+      // Calculate paving push specifically
+      const pavingTask=getTask(41);
+      const pavingPush=pavingTask&&pavingTask.projEnd&&pavingTask.pe?Math.max(0,Math.ceil((pavingTask.projEnd-pavingTask.pe)/864e5)):delayDays;
+      const pavingCost=calculateDelayCost(pavingPush);
+
+      // Trace root cause
+      const causes=traceDelayCause(41);
+      const directCauses=causes.filter(c=>c.days>0&&(c.type==='actual_end'||c.type==='actual_start'||c.type==='progress'||c.type==='lag'));
+      let causeHtml='';
+      if(directCauses.length>0){
+        causeHtml='<br><span style="font-size:11px;font-weight:500;color:#7f1d1d">Root cause: ';
+        causeHtml+=directCauses.slice(0,3).map(c=>'<strong>['+c.wbs+'] '+c.name+'</strong> '+c.detail).join(' &rarr; ');
+        if(directCauses.length>3)causeHtml+=' + '+(directCauses.length-3)+' more';
+        causeHtml+='</span>';
+      }
+
+      alertBanner.innerHTML='<strong style="color:var(--critical)">&#9888; SCHEDULE DELAY DETECTED</strong><br>'+
+        '<span style="font-size:12px;font-weight:500">Source: '+taskName+' (+'+delayDays+'d behind plan) | '+
+        'Paving pushed: <strong>'+pavingPush+' days</strong> past '+fmtDate(D(10,5))+' | '+
+        'Additional interest: <strong>'+fmtCost(Math.round(pavingCost))+'</strong> ('+fmtCost(Math.round(pavingCost/Math.max(1,pavingPush)))+'/day at tail balance)</span>'+
+        causeHtml;
+      alertBanner.style.display='block';
+    }else{
+      alertBanner.style.display='none';
+    }
+  }
+}
+
+// Dependency arrows
+function drawDependencies(){
+  const existing=document.querySelector('.dep-svg');
+  if(existing)existing.remove();
+  const wrap=document.getElementById('ganttWrap');
+  const gantt=document.getElementById('gantt');
+  const rows=gantt.querySelectorAll('.gantt-row[data-id]');
+  if(!rows.length)return;
+
+  const wrapRect=wrap.getBoundingClientRect();
+  const ganttRect=gantt.getBoundingClientRect();
+  const svgW=gantt.scrollWidth;
+  const svgH=gantt.scrollHeight;
+
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.classList.add('dep-svg');
+  svg.setAttribute('width',svgW);
+  svg.setAttribute('height',svgH);
+  svg.style.width=svgW+'px';
+  svg.style.height=svgH+'px';
+
+  // Build position map
+  const posMap={};
+  rows.forEach(row=>{
+    const id=parseInt(row.dataset.id);
+    const bar=row.querySelector('.bar');
+    if(!bar)return;
+    const rowRect=row.getBoundingClientRect();
+    const barRect=bar.getBoundingClientRect();
+    posMap[id]={
+      y:rowRect.top-ganttRect.top+rowRect.height/2,
+      barLeft:barRect.left-ganttRect.left,
+      barRight:barRect.right-ganttRect.left
+    };
+  });
+
+  tasks.forEach(t=>{
+    if(t.type||!t.pred||!t.pred.length)return;
+    if(!posMap[t.id])return;
+    t.pred.forEach(pid=>{
+      if(!posMap[pid])return;
+      const from=posMap[pid];
+      const to=posMap[t.id];
+      const x1=from.barRight+2;
+      const y1=from.y;
+      const x2=to.barLeft-2;
+      const y2=to.y;
+
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      const dx=x2-x1;
+      if(dx>30){
+        const cx=x1+dx*0.5;
+        path.setAttribute('d','M'+x1+','+y1+' C'+cx+','+y1+' '+cx+','+y2+' '+x2+','+y2);
+      }else if(dx>=0){
+        const mid=x1+dx/2;
+        path.setAttribute('d','M'+x1+','+y1+' L'+mid+','+y1+' L'+mid+','+y2+' L'+x2+','+y2);
+      }else{
+        const drop=20;
+        const below=Math.max(y1,y2)+drop;
+        path.setAttribute('d','M'+x1+','+y1+' L'+(x1+8)+','+y1+' L'+(x1+8)+','+below+' L'+(x2-8)+','+below+' L'+(x2-8)+','+y2+' L'+x2+','+y2);
+      }
+
+      if(isCritical(t.id)&&isCritical(pid))path.classList.add('crit-dep');
+      svg.appendChild(path);
+    });
+  });
+
+  gantt.style.position='relative';
+  gantt.appendChild(svg);
+}
+
+function buildStatusFilters(){
+  const sf=document.getElementById('statusFilters');
+  [{cat:'blocked',label:'Blocked'},{cat:'inprogress',label:'In Progress'},{cat:'pending',label:'Pending'},{cat:'complete',label:'Complete'}].forEach(d=>{
+    const b=document.createElement('button');
+    b.className='filter-btn';b.dataset.cat=d.cat;
+    b.innerHTML=d.label+' <span class="count mono">0</span>';
+    b.onclick=()=>filterStatus(d.cat);
+    sf.appendChild(b);
+  });
+}
+
+// Progress tracking
+function setTaskProgress(taskId, pctComplete){
+  pctComplete=Math.max(0,Math.min(100,parseInt(pctComplete)||0));
+  const t=getTask(taskId);
+  if(!t)return;
+  const remainingDays=Math.ceil(t.dur*(1-pctComplete/100));
+  const projEnd=new Date(TODAY.getTime()+remainingDays*864e5);
+  taskProgress[taskId]={pct:pctComplete, daysLeft:remainingDays, projEnd:projEnd};
+  t.projEnd=projEnd;
+  if(!t.projStart)t.projStart=t.as||TODAY;
+  cascadeDelays();
+  render();
+  updateDelayBar();
+  // Re-open panel for this task so user sees update
+  const idx=tasks.indexOf(t);
+  if(idx>=0)openPanel(idx);
+}
+
+function setTaskDaysRemaining(taskId, daysRemaining){
+  daysRemaining=Math.max(0,parseInt(daysRemaining)||0);
+  const t=getTask(taskId);
+  if(!t)return;
+  const pctComplete=t.dur>0?Math.max(0,Math.min(100,Math.round((1-daysRemaining/t.dur)*100))):0;
+  const projEnd=new Date(TODAY.getTime()+daysRemaining*864e5);
+  taskProgress[taskId]={pct:pctComplete, daysLeft:daysRemaining, projEnd:projEnd};
+  t.projEnd=projEnd;
+  if(!t.projStart)t.projStart=t.as||TODAY;
+  cascadeDelays();
+  render();
+  updateDelayBar();
+  const idx=tasks.indexOf(t);
+  if(idx>=0)openPanel(idx);
+}
+
+function setActualStart(taskId, dateStr){
+  const t=getTask(taskId);
+  if(!t)return;
+  if(!dateStr){t.as=null;}
+  else{
+    const parts=dateStr.split('-');
+    t.as=new Date(+parts[0],+parts[1]-1,+parts[2]);
+  }
+  // Auto-set status to IN PROGRESS if actual start provided and not already complete
+  if(t.as&&t.status!=='COMPLETE'){
+    t.status='IN PROGRESS';
+  }
+  if(!t.as&&!t.ae){
+    t.status='NOT STARTED';
+    delete taskProgress[taskId];
+    t.projEnd=null;
+  }
+  cascadeDelays();
+  render();
+  updateDelayBar();
+  const idx=tasks.indexOf(t);
+  if(idx>=0)openPanel(idx);
+}
+
+function setActualEnd(taskId, dateStr){
+  const t=getTask(taskId);
+  if(!t)return;
+  if(!dateStr){
+    t.ae=null;
+    // Revert status based on other data
+    if(t.as){t.status='IN PROGRESS';}
+    else{t.status='NOT STARTED'; delete taskProgress[taskId]; t.projEnd=null;}
+  }else{
+    const parts=dateStr.split('-');
+    t.ae=new Date(+parts[0],+parts[1]-1,+parts[2]);
+    t.status='COMPLETE';
+    // Actual end is authoritative: clear any manual progress/projection
+    delete taskProgress[taskId];
+    t.projEnd=null;
+    // Auto-set actual start to planned start if not already set
+    if(!t.as)t.as=t.ps;
+  }
+  cascadeDelays();
+  render();
+  updateDelayBar();
+  const idx=tasks.indexOf(t);
+  if(idx>=0)openPanel(idx);
+}
+
+// Cascade delays through entire successor chain using topological sort
+function cascadeDelays(){
+  // Reset projected dates on all tasks that don't have manual progress entered
+  tasks.forEach(t=>{
+    if(t.type)return;
+    if(!taskProgress[t.id]){
+      t.projStart=null;
+      t.projEnd=null;
+    }
+  });
+
+  // Build processing order: tasks with no unprocessed predecessors first
+  // We'll iterate all tasks in dependency order (BFS from roots)
+  const inDegree={};
+  const adjList={};
+  tasks.forEach(t=>{
+    if(t.type)return;
+    inDegree[t.id]=0;
+    adjList[t.id]=[];
+  });
+  tasks.forEach(t=>{
+    if(t.type||!t.pred)return;
+    t.pred.forEach(pId=>{
+      if(adjList[pId])adjList[pId].push(t.id);
+      inDegree[t.id]=(inDegree[t.id]||0)+1;
+    });
+  });
+
+  // Topological sort via Kahn's algorithm
+  const queue=[];
+  tasks.forEach(t=>{
+    if(!t.type&&(inDegree[t.id]||0)===0)queue.push(t.id);
+  });
+  const order=[];
+  while(queue.length>0){
+    const id=queue.shift();
+    order.push(id);
+    (adjList[id]||[]).forEach(succId=>{
+      inDegree[succId]--;
+      if(inDegree[succId]===0)queue.push(succId);
+    });
+  }
+
+  // Process tasks in topological order
+  order.forEach(id=>{
+    const t=getTask(id);
+    if(!t)return;
+
+    // If this task has an actual end date, it's a fixed point - no override
+    if(t.ae) return;
+
+    // If this task has manual progress, its projEnd is already set
+    if(taskProgress[id]){
+      // projEnd already set by setTaskProgress/setTaskDaysRemaining
+      return;
+    }
+
+    // For non-manual tasks, check if any predecessor's projected end pushes this task
+    if(!t.pred||t.pred.length===0)return;
+
+    let maxPredEnd=null;
+    t.pred.forEach(pId=>{
+      const pred=getTask(pId);
+      if(!pred)return;
+      // Use the predecessor's projected end if it exists, otherwise planned end
+      const predEnd=pred.ae||pred.projEnd||pred.pe;
+      if(!predEnd)return;
+      // Apply lag: positive=wait after pred finishes, negative=overlap (start before pred finishes)
+      const lag=getLag(pId,id);
+      const adjEnd=new Date(predEnd.getTime()+lag*864e5);
+      if(!maxPredEnd||adjEnd>maxPredEnd){
+        maxPredEnd=adjEnd;
+      }
+    });
+
+    if(!maxPredEnd)return;
+
+    // Compare latest predecessor end (with lag) to this task's base start
+    const origStart=t.ps;
+    const shiftDays=Math.ceil((maxPredEnd-origStart)/864e5);
+
+    // shiftDays > 0 = predecessors finishing late (push out)
+    // shiftDays < 0 = predecessors finishing early (pull in)
+    // shiftDays === 0 = no change
+    if(shiftDays!==0){
+      t.projStart=new Date(t.ps.getTime()+shiftDays*864e5);
+      t.projEnd=new Date(t.pe.getTime()+shiftDays*864e5);
+    }
+  });
+}
+
+// Detail Panel
+function openPanel(idx){
+  const t=tasks[idx];if(t.type)return;
+  const p=document.getElementById('detailPanel');
+  const o=document.getElementById('overlay');
+  const crit=isCritical(t.id);const ncp=isNearCrit(t.id)||(t.ncp===true);
+  const cost=taskCost(t.id);const items=COST_ITEMS[t.id]||[];
+
+  let h='<div class="panel-header"><div><div class="wbs-label">'+t.wbs+'</div><h2>'+t.name+'</h2></div><button class="panel-close" onclick="closePanel()">&times;</button></div>';
+  h+='<div class="panel-section"><span class="status-pip '+pipClass(t.status)+' mono" style="font-size:11px;padding:3px 10px">'+t.status+'</span>';
+  if(crit)h+=' <span class="critical-badge">CRITICAL PATH</span>';
+  if(ncp)h+=' <span class="critical-badge" style="background:#fff7ed;color:#d97706;border-color:#fed7aa">NEAR-CRITICAL</span>';
+
+  // Float to target
+  const flt=daysToTarget(t);
+  if(flt!==null&&statusCat(t.status)!=='complete'){
+    let fc='color:var(--complete)';
+    if(flt<=21)fc='color:#d97706';
+    if(flt<=0)fc='color:var(--critical)';
+    h+='<div style="margin-top:8px;'+fc+';font-size:24px;font-weight:700;font-family:\'JetBrains Mono\',monospace">'+flt+'d <span style="font-size:12px;font-weight:500;color:var(--text-dim)">to paving target</span></div>';
+  }
+
+  // Progress tracking (for IN PROGRESS tasks)
+  if(statusCat(t.status)==='inprogress'){
+    const currProg=taskProgress[t.id]||{pct:0, daysLeft:t.dur};
+    h+='<div class="panel-section"><h3>Progress Tracking</h3>';
+    h+='<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px">';
+    h+='<div style="margin-bottom:12px">';
+    h+='<label style="display:block;font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:6px">OPTION A: % Complete</label>';
+    h+='<input type="range" id="pctInput_'+t.id+'" min="0" max="100" value="'+currProg.pct+'" style="width:100%;margin-bottom:6px" onchange="setTaskProgress('+t.id+',this.value)">';
+    h+='<div style="display:flex;gap:8px;align-items:center">';
+    h+='<input type="number" id="pctNum_'+t.id+'" min="0" max="100" value="'+currProg.pct+'" style="width:60px;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:\'JetBrains Mono\',monospace" onchange="setTaskProgress('+t.id+',this.value)">';
+    h+='<span style="color:var(--text-dim);font-size:12px">%</span>';
+    h+='</div>';
+    h+='</div>';
+    h+='<div style="border-top:1px solid #dcfce7;padding-top:12px">';
+    h+='<label style="display:block;font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:6px">OPTION B: Days Remaining</label>';
+    h+='<input type="number" id="daysInput_'+t.id+'" min="0" value="'+currProg.daysLeft+'" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:\'JetBrains Mono\',monospace;box-sizing:border-box" onchange="setTaskDaysRemaining('+t.id+',this.value)">';
+    h+='<div style="font-size:10px;color:var(--text-dim);margin-top:6px">Projected end: '+fmtDate(currProg.daysLeft?new Date(TODAY.getTime()+currProg.daysLeft*864e5):new Date())+'</div>';
+    h+='</div>';
+    h+='</div></div>';
+  }
+
+  // Delay cost impact (for CP tasks)
+  if(crit&&t.bt!=='milestone'){
+    const tdi=dailyInterestAtDate(t.ps||TODAY);
+    const balance=getDrawBalanceAtDate(t.ps||TODAY);
+    h+='<div class="panel-section"><h3>Interest Cost of Delay</h3>';
+    h+='<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:10px 12px">';
+    h+='<div style="font-size:10px;color:var(--text-dim);margin-bottom:6px">Est. loan balance at task start: <strong style="font-family:\'JetBrains Mono\',monospace">'+fmtCost(Math.round(balance))+'</strong></div>';
+    h+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+    h+='<tr><td style="padding:3px 0;font-weight:700">Interest per day of delay</td><td style="text-align:right;font-family:\'JetBrains Mono\',monospace;font-weight:700;color:var(--critical);font-size:14px">'+fmtCost(Math.round(tdi))+'/day</td></tr>';
+    h+='<tr><td style="padding:3px 0;color:var(--text-dim)">Per week</td><td style="text-align:right;font-family:\'JetBrains Mono\',monospace;font-weight:600;color:var(--critical)">'+fmtCost(Math.round(tdi*7))+'/wk</td></tr>';
+    h+='<tr style="border-top:1px solid #fecaca"><td style="padding:4px 0;color:var(--text-dim)">This task duration ('+t.dur+'d)</td><td style="text-align:right;font-family:\'JetBrains Mono\',monospace;font-weight:600;color:var(--text)">'+fmtCost(Math.round(tdi*t.dur))+' interest at risk</td></tr>';
+    h+='</table>';
+    h+='<div style="font-size:10px;color:var(--text-dim);margin-top:6px;font-style:italic">9.25% on estimated cumulative draw at task start. Loan drawn as invoiced per Draw Tracker.</div>';
+    h+='</div></div>';
+  }
+
+  // Status change toggles
+  h+='<div class="status-toggles">';
+  var statuses=['COMPLETE','COMPLETE (LATE)','IN PROGRESS','ACTIVE','SUBST. COMPLETE','PENDING','BLOCKED','ACTION NEEDED'];
+  statuses.forEach(s=>{
+    var isActive=t.status===s;
+    h+='<button class="status-toggle-btn'+(isActive?' active-status':'')+'" onclick="changeStatus('+idx+',\''+s.replace(/'/g,"\\'")+'\')">' +s+'</button>';
+  });
+  h+='</div></div>';
+
+  // Cost breakdown
+  h+='<div class="panel-section"><h3>Cost Breakdown</h3><div class="cost-breakdown">';
+  h+='<div style="font-size:20px;font-weight:700;font-family:\'JetBrains Mono\',monospace;color:var(--complete)">'+fmtCostFull(cost)+'</div>';
+  if(items.length>0){
+    h+='<table><tr><th>Bid Item</th><th>Description</th><th style="text-align:right">Amount</th></tr>';
+    items.forEach(i=>{
+      h+='<tr><td class="mono" style="font-size:10px;white-space:nowrap">'+i.item+'</td><td>'+i.desc+'</td><td class="amt">'+fmtCostFull(i.amt)+'</td></tr>';
+    });
+    h+='<tr class="total-row"><td></td><td><strong>Total</strong></td><td class="amt">'+fmtCostFull(cost)+'</td></tr>';
+    h+='</table>';
+  }
+  if(cost===0&&!ncp)h+='<div style="color:var(--text-dim);font-size:11px;margin-top:4px;font-style:italic">Cost included in related bid items or incidental per bid notes.</div>';
+  if(ncp)h+='<div style="color:#d97706;font-size:11px;margin-top:4px;font-weight:600">NOT IN CONTRACT - No cost to JL Gray bid.</div>';
+  h+='</div></div>';
+
+  // Consultant
+  h+='<div class="panel-section"><h3>Responsible</h3><div>'+t.consultant+'</div></div>';
+
+  // BASE DATES (reference - never change)
+  h+='<div class="panel-section"><h3 style="color:var(--text-dim)">Base Dates <span style="font-size:9px;font-weight:400">(original schedule)</span></h3>';
+  h+='<div class="date-cards" style="opacity:.7">';
+  h+='<div class="date-card"><label>Base Start</label><div class="date-val mono">'+fmtDate(t.ps)+'</div></div>';
+  h+='<div class="date-card"><label>Base End</label><div class="date-val mono">'+fmtDate(t.pe)+'</div></div>';
+  h+='<div class="date-card"><label>Duration</label><div class="date-val mono">'+t.dur+' days</div></div>';
+  h+='</div></div>';
+
+  // PROJECTED / OPERATING DATES (dynamic - what the schedule runs on)
+  const opS=t.as||t.projStart||t.ps;
+  const opE=t.ae||t.projEnd||t.pe;
+  const startShift=Math.ceil((opS-t.ps)/864e5);
+  const endShift=Math.ceil((opE-t.pe)/864e5);
+  const hasShift=startShift!==0||endShift!==0;
+  h+='<div class="panel-section"><h3>Projected Dates <span style="font-size:9px;font-weight:400">(schedule runs on these)</span></h3>';
+  h+='<div class="date-cards">';
+  h+='<div class="date-card" style="border-color:'+(startShift>0?'var(--critical)':startShift<0?'var(--complete)':'var(--border)')+'"><label>Proj. Start</label><div class="date-val mono" style="color:'+(startShift>0?'var(--critical)':startShift<0?'var(--complete)':'inherit')+'">'+fmtDate(opS)+(startShift!==0?' <span style="font-size:10px">'+(startShift>0?'+':'')+startShift+'d</span>':'')+'</div></div>';
+  h+='<div class="date-card" style="border-color:'+(endShift>0?'var(--critical)':endShift<0?'var(--complete)':'var(--border)')+'"><label>Proj. End</label><div class="date-val mono" style="color:'+(endShift>0?'var(--critical)':endShift<0?'var(--complete)':'inherit')+'">'+fmtDate(opE)+(endShift!==0?' <span style="font-size:10px">'+(endShift>0?'+':'')+endShift+'d</span>':'')+'</div></div>';
+  h+='</div>';
+
+  // Actual dates - editable inputs
+  h+='<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  h+='<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text-dim);margin-bottom:4px">ACTUAL START</label>';
+  h+='<input type="date" value="'+(t.as?fmtDateISO(t.as):'')+'" onchange="setActualStart('+t.id+',this.value)" style="width:100%;padding:6px 8px;border:1px solid '+(t.as?'var(--complete)':'var(--border)')+';border-radius:4px;font-size:12px;font-family:JetBrains Mono,monospace;box-sizing:border-box;background:'+(t.as?'#f0fdf4':'#fff')+'"></div>';
+  h+='<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text-dim);margin-bottom:4px">ACTUAL END</label>';
+  h+='<input type="date" value="'+(t.ae?fmtDateISO(t.ae):'')+'" onchange="setActualEnd('+t.id+',this.value)" style="width:100%;padding:6px 8px;border:1px solid '+(t.ae?'var(--complete)':'var(--border)')+';border-radius:4px;font-size:12px;font-family:JetBrains Mono,monospace;box-sizing:border-box;background:'+(t.ae?'#f0fdf4':'#fff')+'"></div>';
+  h+='</div>';
+  h+='</div>';
+
+  // Predecessors (editable)
+  h+='<div class="panel-section"><h3>Predecessors</h3>';
+  if(t.pred&&t.pred.length){
+    h+='<ul class="pred-list">';
+    t.pred.forEach(pid=>{
+      const pt=getTask(pid);
+      if(pt){
+        const pi=tasks.indexOf(pt);
+        h+='<li style="display:flex;align-items:center;gap:6px">';
+        const plag=getLag(pid,t.id);
+        h+='<span style="flex:1;cursor:pointer" onclick="openPanel('+pi+')"><span class="wbs mono" style="font-size:10px">'+pt.wbs+'</span> '+pt.name+'</span>';
+        h+='<input type="number" value="'+plag+'" onchange="setLinkLag('+pid+','+t.id+',this.value,'+t.id+')" style="width:52px;padding:2px 4px;border:1px solid var(--border);border-radius:3px;font-size:10px;font-family:JetBrains Mono,monospace;text-align:center;background:'+(plag<0?'#eff6ff':plag>0?'#fef9c3':'#fff')+'" title="Lag days (negative=lead/overlap, positive=delay)">';
+        h+='<span style="font-size:9px;color:var(--text-dim);width:12px">d</span>';
+        h+='<button onclick="event.stopPropagation();removeLink('+pid+','+t.id+')" style="background:#fee2e2;color:var(--critical);border:1px solid #fecaca;border-radius:3px;padding:1px 6px;font-size:10px;cursor:pointer;font-weight:700" title="Remove this predecessor link">&times;</button>';
+        h+='</li>';
+      }
+    });
+    h+='</ul>';
+  }else{
+    h+='<div style="font-size:11px;color:var(--text-dim);padding:4px 0">No predecessors</div>';
+  }
+  // Add predecessor dropdown
+  h+='<div style="margin-top:8px;display:flex;gap:6px;align-items:center">';
+  h+='<select id="addPredSelect_'+t.id+'" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:#fff">';
+  h+='<option value="">+ Add predecessor...</option>';
+  tasks.forEach(ot=>{
+    if(ot.type||ot.id===t.id)return;
+    if(t.pred&&t.pred.includes(ot.id))return;
+    // Don't allow adding a successor as a predecessor (circular)
+    if(ot.pred&&ot.pred.includes(t.id))return;
+    h+='<option value="'+ot.id+'">'+ot.wbs+' '+ot.name+'</option>';
+  });
+  h+='</select>';
+  h+='<button onclick="addPredFromSelect('+t.id+')" style="background:var(--navy);color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap">Add</button>';
+  h+='</div>';
+  h+='</div>';
+
+  // Successors (editable)
+  const succs=getSuccessors(t.id);
+  h+='<div class="panel-section"><h3>Successors</h3>';
+  if(succs.length){
+    h+='<ul class="pred-list">';
+    succs.forEach(s=>{
+      const si=tasks.indexOf(s);
+      h+='<li style="display:flex;align-items:center;gap:6px">';
+      const slag=getLag(t.id,s.id);
+      h+='<span style="flex:1;cursor:pointer" onclick="openPanel('+si+')"><span class="wbs mono" style="font-size:10px">'+s.wbs+'</span> '+s.name+'</span>';
+      h+='<input type="number" value="'+slag+'" onchange="setLinkLag('+t.id+','+s.id+',this.value,'+t.id+')" style="width:52px;padding:2px 4px;border:1px solid var(--border);border-radius:3px;font-size:10px;font-family:JetBrains Mono,monospace;text-align:center;background:'+(slag<0?'#eff6ff':slag>0?'#fef9c3':'#fff')+'" title="Lag days (negative=lead/overlap, positive=delay)">';
+      h+='<span style="font-size:9px;color:var(--text-dim);width:12px">d</span>';
+      h+='<button onclick="event.stopPropagation();removeLink('+t.id+','+s.id+')" style="background:#fee2e2;color:var(--critical);border:1px solid #fecaca;border-radius:3px;padding:1px 6px;font-size:10px;cursor:pointer;font-weight:700" title="Remove this successor link">&times;</button>';
+      h+='</li>';
+    });
+    h+='</ul>';
+  }else{
+    h+='<div style="font-size:11px;color:var(--text-dim);padding:4px 0">No successors</div>';
+  }
+  // Add successor dropdown
+  h+='<div style="margin-top:8px;display:flex;gap:6px;align-items:center">';
+  h+='<select id="addSuccSelect_'+t.id+'" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;background:#fff">';
+  h+='<option value="">+ Add successor...</option>';
+  tasks.forEach(ot=>{
+    if(ot.type||ot.id===t.id)return;
+    if(succs.some(s=>s.id===ot.id))return;
+    // Don't allow adding a predecessor as a successor (circular)
+    if(t.pred&&t.pred.includes(ot.id))return;
+    h+='<option value="'+ot.id+'">'+ot.wbs+' '+ot.name+'</option>';
+  });
+  h+='</select>';
+  h+='<button onclick="addSuccFromSelect('+t.id+')" style="background:var(--navy);color:#fff;border:none;border-radius:4px;padding:6px 12px;font-size:11px;cursor:pointer;font-weight:600;white-space:nowrap">Add</button>';
+  h+='</div>';
+  h+='</div>';
+
+  if(t.notes)h+='<div class="panel-section"><h3>Notes</h3><div class="panel-notes">'+t.notes+'</div></div>';
+  if(t.source)h+='<div class="panel-section" style="color:var(--text-light);font-size:11px;font-style:italic">Source: '+t.source+'</div>';
+
+  p.innerHTML=h;p.classList.add('open');o.classList.add('open');
+}
+
+function changeStatus(idx,newStatus){
+  const t=tasks[idx];
+  t.status=newStatus;
+  const btMap={'COMPLETE':'complete','COMPLETE (LATE)':'complete','IN PROGRESS':'inprogress','ACTIVE':'inprogress','SUBST. COMPLETE':'inprogress','PENDING':'pending','BLOCKED':'blocked','ACTION NEEDED':'blocked'};
+  t.bt=btMap[newStatus]||'pending';
+  renderGantt();
+  openPanel(idx);
+  showToast('Status updated to '+newStatus);
+}
+
+function closePanel(){document.getElementById('detailPanel').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
+
+// Link editing functions
+function wouldCreateCycle(fromId, toId){
+  // Check if adding a link from fromId -> toId (toId depends on fromId) would create a cycle
+  // Walk forward from toId through successors; if we reach fromId, it's a cycle
+  const visited=new Set();
+  const queue=[toId];
+  while(queue.length>0){
+    const id=queue.shift();
+    if(id===fromId)return true;
+    if(visited.has(id))continue;
+    visited.add(id);
+    const succs=getSuccessors(id);
+    succs.forEach(s=>queue.push(s.id));
+  }
+  return false;
+}
+
+function setLinkLag(predId, succId, val, reOpenTaskId){
+  const days=parseInt(val)||0;
+  setLag(predId,succId,days);
+  cascadeDelays();
+  render();
+  updateDelayBar();
+  if(reOpenTaskId!==undefined){
+    const t=getTask(reOpenTaskId);
+    const idx=tasks.indexOf(t);
+    if(idx>=0)openPanel(idx);
+  }
+}
+
+function removeLink(predId, succId){
+  const succ=getTask(succId);
+  if(!succ||!succ.pred)return;
+  succ.pred=succ.pred.filter(p=>p!==predId);
+  delete linkLag[predId+'_'+succId];
+  cascadeDelays();
+  render();
+  updateDelayBar();
+  // Re-open the panel for the successor task
+  const idx=tasks.indexOf(succ);
+  if(idx>=0)openPanel(idx);
+  showToast('Removed link: '+getTask(predId).name+' -> '+succ.name);
+}
+
+function addLink(predId, succId){
+  const pred=getTask(predId);
+  const succ=getTask(succId);
+  if(!pred||!succ)return;
+  if(!succ.pred)succ.pred=[];
+  if(succ.pred.includes(predId)){showToast('Link already exists');return;}
+  // Check for circular dependency
+  if(wouldCreateCycle(predId, succId)){
+    showToast('Cannot add: would create circular dependency');
+    return;
+  }
+  succ.pred.push(predId);
+  cascadeDelays();
+  render();
+  updateDelayBar();
+  showToast('Added link: '+pred.name+' -> '+succ.name);
+}
+
+function addPredFromSelect(taskId){
+  const sel=document.getElementById('addPredSelect_'+taskId);
+  if(!sel||!sel.value)return;
+  const predId=parseInt(sel.value);
+  addLink(predId, taskId);
+  // Re-open panel to show updated links
+  const t=getTask(taskId);
+  const idx=tasks.indexOf(t);
+  if(idx>=0)openPanel(idx);
+}
+
+function addSuccFromSelect(taskId){
+  const sel=document.getElementById('addSuccSelect_'+taskId);
+  if(!sel||!sel.value)return;
+  const succId=parseInt(sel.value);
+  addLink(taskId, succId);
+  // Re-open panel to show updated links
+  const t=getTask(taskId);
+  const idx=tasks.indexOf(t);
+  if(idx>=0)openPanel(idx);
+}
+
+// Summary Table
+function renderSummary(){
+  const sec=document.getElementById('summarySection');
+  let h='<h2>Cost Summary by Schedule Activity</h2>';
+  h+='<table class="summary-table"><tr><th>WBS</th><th>Activity</th><th>Duration</th><th>Start</th><th>End</th><th>Bid Items</th><th style="text-align:right">Cost</th></tr>';
+
+  let grandTotal=0;
+  const phases=[
+    {key:'p0',name:'Preconstruction Activity'},
+    {key:'p1',name:'Earthwork'},
+    {key:'p2',name:'Wet Utilities'},
+    {key:'p3',name:'Dry Utilities (Not in Contract)'},
+    {key:'p4',name:'Street Construction'},
+    {key:'p5',name:'Close Out'}
+  ];
+
+  phases.forEach(ph=>{
+    let phaseTotal=0;
+    const phaseTasks=tasks.filter(t=>!t.type&&t.phase===ph.key);
+    phaseTasks.forEach(t=>{
+      const c=taskCost(t.id);phaseTotal+=c;
+      const items=COST_ITEMS[t.id]||[];
+      const itemStr=items.filter(i=>i.amt>0).map(i=>i.item).join(', ');
+      h+='<tr'+(isCritical(t.id)?' style="background:rgba(220,38,38,.04)"':'')+'>';
+      h+='<td class="mono" style="font-size:10px">'+t.wbs+'</td>';
+      h+='<td>'+(isCritical(t.id)?'<span style="color:var(--critical);font-weight:600">'+t.name+'</span>':t.name)+'</td>';
+      h+='<td class="mono" style="font-size:11px">'+t.dur+'d</td>';
+      const tOpS=t.as||t.projStart||t.ps;
+      const tOpE=t.ae||t.projEnd||t.pe;
+      const tShift=Math.ceil((tOpE-t.pe)/864e5);
+      h+='<td class="mono" style="font-size:11px">'+fmtDate(tOpS)+'</td>';
+      h+='<td class="mono" style="font-size:11px">'+fmtDate(tOpE)+(tShift!==0?' <span style="font-size:9px;color:'+(tShift>0?'var(--critical)':'var(--complete)')+'">'+(tShift>0?'+':'')+tShift+'d</span>':'')+'</td>';
+      h+='<td style="font-size:10px;color:var(--text-dim)">'+itemStr+'</td>';
+      h+='<td class="amt">'+fmtCostFull(c)+'</td></tr>';
+    });
+    grandTotal+=phaseTotal;
+    h+='<tr class="phase-summary"><td></td><td colspan="5">'+ph.name+' Subtotal</td><td class="amt">'+fmtCostFull(phaseTotal)+'</td></tr>';
+  });
+
+  h+='<tr class="grand-total"><td></td><td colspan="5">TOTAL COST-LOADED VALUE</td><td class="amt" style="text-align:right">'+fmtCostFull(grandTotal)+'</td></tr>';
+  h+='</table>';
+  h+='<div style="margin-top:12px;font-size:11px;color:var(--text-dim)"><strong>Notes:</strong> Total Base Bid = '+fmtCostFull(TOTAL_BID)+'. All Exhibit B line items are mapped. A-8 (erosion control maintenance) and A-16 (material &amp; density testing) are split proportionally across phases. NTP: '+fmtDate(NTP_DATE)+' | Paving Target: '+fmtDate(TARGET_DATE)+'</div>';
+  sec.innerHTML=h;
+}
+
+// Export
+function showExportNotes(){
+  let t='RIA AT ROUND ROCK - FULL CONSTRUCTION SCHEDULE WITH COST LOADING\n';
+  t+='Date: '+fmtDate(TODAY)+'\n';
+  t+='GC: JL Gray Construction | Total Base Bid: '+fmtCostFull(TOTAL_BID)+'\n';
+  t+='NTP: '+fmtDate(NTP_DATE)+' | Paving Target: '+fmtDate(TARGET_DATE)+'\n';
+  const projMonth=getCurrentProjectMonth();
+  const balance=getDrawBalanceAtDate(TODAY);
+  const dailyInt=dailyInterestAtDate(TODAY);
+  t+='PROJECT MONTH: '+projMonth+' of 26 | Est. Loan Balance: '+fmtCostFull(Math.round(balance))+'\n';
+  t+='DAILY INTEREST COST: '+fmtCostFull(Math.round(dailyInt))+'/day ('+fmtCostFull(Math.round(dailyInt*7))+'/week)\n';
+  t+='  9.25% on drawn balance | Source: Master Budget Monthly Cashflow\n';
+  t+='='+'='.repeat(70)+'\n\n';
+
+  // Blocked/Action items first
+  const blocked=tasks.filter(t2=>!t2.type&&(t2.status.includes('BLOCKED')||t2.status.includes('ACTION')));
+  if(blocked.length){
+    t+='BLOCKED / ACTION NEEDED:\n';
+    blocked.forEach((t2,i)=>{
+      t+=(i+1)+'. ['+t2.wbs+'] '+t2.name+' ('+t2.consultant+')';
+      if(t2.notes)t+=' - '+t2.notes;
+      t+='\n';
+    });
+    t+='\n';
+  }
+
+  // In Progress
+  const inprog=tasks.filter(t2=>!t2.type&&(statusCat(t2.status)==='inprogress'));
+  if(inprog.length){
+    t+='IN PROGRESS:\n';
+    inprog.forEach((t2,i)=>{
+      const ipEnd=t2.ae||t2.projEnd||t2.pe;
+      t+=(i+1)+'. ['+t2.wbs+'] '+t2.name+' ('+t2.consultant+') - Projected: '+fmtDate(ipEnd)+'\n';
+    });
+    t+='\n';
+  }
+
+  t+='ALL ACTIVITIES:\n\n';
+  t+='WBS  | Activity                          | Days | Proj Start | Proj End   | Base End   | Cost\n';
+  t+='-'.repeat(110)+'\n';
+  tasks.filter(t2=>!t2.type&&t2.bt!=='milestone').forEach(t2=>{
+    const c=taskCost(t2.id);
+    const w=t2.wbs.padEnd(5);
+    const n=t2.name.padEnd(35).substring(0,35);
+    const d=String(t2.dur).padStart(4);
+    const cp=isCritical(t2.id)?' [CP]':'';
+    const eOpS=t2.as||t2.projStart||t2.ps;
+    const eOpE=t2.ae||t2.projEnd||t2.pe;
+    t+=w+'| '+n+'| '+d+' | '+fmtDate(eOpS).padEnd(11)+'| '+fmtDate(eOpE).padEnd(11)+'| '+fmtDate(t2.pe).padEnd(11)+'| '+fmtCostFull(c)+cp+'\n';
+  });
+  t+='\n'+'='.repeat(70)+'\n';
+  let total=0;
+  tasks.forEach(t2=>{if(!t2.type)total+=taskCost(t2.id)});
+  t+='TOTAL COST-LOADED VALUE: '+fmtCostFull(total)+'\n';
+  t+='TOTAL BASE BID: '+fmtCostFull(TOTAL_BID)+'\n';
+  document.getElementById('exportText').value=t;
+  document.getElementById('exportModal').classList.add('open');
+}
+function showGuide(){document.getElementById('guideModal').classList.add('open')}
+
+// ===== SAVE / LOAD STATE (Cloud + Local) =====
+const SAVE_KEY='ria_schedule_v4_state';
+const CONFIG_KEY='ria_schedule_v4_config';
+
+// Cloud config - stored in localStorage
+function getConfig(){
+  try{const c=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');return c;}catch(e){return{};}
+}
+function setConfig(cfg){
+  try{localStorage.setItem(CONFIG_KEY,JSON.stringify(cfg));}catch(e){}
+}
+
+function gatherState(){
+  const taskState=[];
+  tasks.forEach(t=>{
+    if(t.type)return;
+    const entry={id:t.id};
+    if(t.as)entry.as=fmtDateISO(t.as);
+    if(t.ae)entry.ae=fmtDateISO(t.ae);
+    if(t.status!==getDefaultStatus(t))entry.status=t.status;
+    if(t.projStart)entry.projStart=fmtDateISO(t.projStart);
+    if(t.projEnd)entry.projEnd=fmtDateISO(t.projEnd);
+    entry.pred=t.pred||[];
+    if(entry.as||entry.ae||entry.status||entry.projStart||entry.projEnd||JSON.stringify(entry.pred)!==JSON.stringify(getOrigPred(t.id))){
+      taskState.push(entry);
+    }
+  });
+  return {
+    version:4,
+    savedAt:new Date().toISOString(),
+    project:'Ria at Round Rock',
+    taskState:taskState,
+    taskProgress:Object.keys(taskProgress).reduce((o,k)=>{
+      const tp=taskProgress[k];
+      o[k]={pct:tp.pct,daysLeft:tp.daysLeft,projEnd:fmtDateISO(tp.projEnd)};
+      return o;
+    },{}),
+    linkLag:Object.assign({},linkLag)
+  };
+}
+
+const _origPred={};
+tasks.forEach(t=>{if(!t.type)_origPred[t.id]=(t.pred||[]).slice();});
+function getOrigPred(id){return _origPred[id]||[];}
+function getDefaultStatus(t){
+  if(t.ae)return'COMPLETE';
+  if(t.as)return'IN PROGRESS';
+  return'NOT STARTED';
+}
+function parseISODate(s){
+  if(!s)return null;
+  const p=s.split('-');
+  return new Date(+p[0],+p[1]-1,+p[2]);
+}
+
+function applyState(state){
+  tasks.forEach(t=>{
+    if(t.type)return;
+    t.as=null;t.ae=null;t.projStart=null;t.projEnd=null;
+    t.pred=(_origPred[t.id]||[]).slice();
+  });
+  Object.keys(taskProgress).forEach(k=>delete taskProgress[k]);
+  Object.keys(linkLag).forEach(k=>delete linkLag[k]);
+  if(state.taskState){
+    state.taskState.forEach(s=>{
+      const t=getTask(s.id);
+      if(!t)return;
+      if(s.as)t.as=parseISODate(s.as);
+      if(s.ae)t.ae=parseISODate(s.ae);
+      if(s.status)t.status=s.status;
+      if(s.pred)t.pred=s.pred;
+    });
+  }
+  if(state.taskProgress){
+    Object.keys(state.taskProgress).forEach(k=>{
+      const sp=state.taskProgress[k];
+      const projEnd=parseISODate(sp.projEnd);
+      taskProgress[k]={pct:sp.pct,daysLeft:sp.daysLeft,projEnd:projEnd};
+      const t=getTask(parseInt(k));
+      if(t){t.projEnd=projEnd;if(!t.projStart)t.projStart=t.as||TODAY;}
+    });
+  }
+  if(state.linkLag){
+    Object.keys(state.linkLag).forEach(k=>{linkLag[k]=state.linkLag[k];});
+  }
+  tasks.forEach(t=>{
+    if(t.type)return;
+    if(t.ae&&t.status!=='COMPLETE')t.status='COMPLETE';
+    else if(t.as&&!t.ae&&t.status==='NOT STARTED')t.status='IN PROGRESS';
+  });
+  cascadeDelays();
+  render();
+  updateDelayBar();
+}
+
+function updateSaveStatus(msg,color){
+  const el=document.getElementById('saveStatus');
+  if(el){el.textContent=msg;el.style.color=color||'rgba(255,255,255,.5)';}
+}
+
+// ---- LOCAL SAVE/LOAD ----
+function autoSave(){
+  try{
+    const state=gatherState();
+    localStorage.setItem(SAVE_KEY,JSON.stringify(state));
+  }catch(e){}
+}
+
+function autoLoad(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw)return false;
+    const state=JSON.parse(raw);
+    if(state&&state.version===4){applyState(state);return true;}
+  }catch(e){}
+  return false;
+}
+
+// ---- CLOUD SAVE/LOAD (JSONBin.io) ----
+async function cloudSave(){
+  const cfg=getConfig();
+  if(!cfg.apiKey){
+    showSetup();
+    showToast('Set up cloud save first (enter your JSONBin API key)');
+    return;
+  }
+  const btn=document.getElementById('cloudSaveBtn');
+  btn.textContent='Saving...';btn.disabled=true;
+  updateSaveStatus('Saving...','#fbbf24');
+
+  const state=gatherState();
+  try{
+    if(cfg.binId){
+      // Update existing bin
+      const res=await fetch('https://api.jsonbin.io/v3/b/'+cfg.binId,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':cfg.apiKey},
+        body:JSON.stringify(state)
+      });
+      if(!res.ok){const err=await res.json();throw new Error(err.message||'HTTP '+res.status);}
+      const saved=new Date();
+      updateSaveStatus('Saved '+saved.toLocaleTimeString(),'rgba(34,197,94,.9)');
+      showToast('Saved to cloud');
+    }else{
+      // Create new bin
+      const res=await fetch('https://api.jsonbin.io/v3/b',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'X-Master-Key':cfg.apiKey,
+          'X-Bin-Name':'Ria Schedule State',
+          'X-Bin-Private':String(false)
+        },
+        body:JSON.stringify(state)
+      });
+      if(!res.ok){const err=await res.json();throw new Error(err.message||'HTTP '+res.status);}
+      const data=await res.json();
+      const newBinId=data.metadata.id;
+      cfg.binId=newBinId;
+      setConfig(cfg);
+      document.getElementById('setupBinId').value=newBinId;
+      updateSaveStatus('Saved '+new Date().toLocaleTimeString(),'rgba(34,197,94,.9)');
+      showToast('Cloud bin created: '+newBinId);
+    }
+    // Also save locally
+    autoSave();
+  }catch(err){
+    updateSaveStatus('Save failed','#ef4444');
+    showToast('Cloud save failed: '+err.message);
+  }
+  btn.textContent='\u2601 Save';btn.disabled=false;
+}
+
+async function cloudLoad(){
+  const cfg=getConfig();
+  if(!cfg.apiKey||!cfg.binId)return false;
+  updateSaveStatus('Loading...','#fbbf24');
+  try{
+    const res=await fetch('https://api.jsonbin.io/v3/b/'+cfg.binId+'/latest',{
+      headers:{'X-Master-Key':cfg.apiKey}
+    });
+    if(!res.ok)return false;
+    const data=await res.json();
+    const state=data.record;
+    if(!state||state.version!==4)return false;
+    applyState(state);
+    autoSave(); // cache locally
+    const ts=state.savedAt?new Date(state.savedAt).toLocaleTimeString():'';
+    updateSaveStatus('Loaded '+ts,'rgba(34,197,94,.9)');
+    return true;
+  }catch(e){
+    updateSaveStatus('Cloud unavailable','rgba(255,255,255,.4)');
+    return false;
+  }
+}
+
+// ---- SETUP ----
+function showSetup(){
+  const cfg=getConfig();
+  document.getElementById('setupApiKey').value=cfg.apiKey||'';
+  document.getElementById('setupBinId').value=cfg.binId||'';
+  document.getElementById('setupModal').classList.add('open');
+}
+
+function saveSetup(){
+  const apiKey=document.getElementById('setupApiKey').value.trim();
+  const binId=document.getElementById('setupBinId').value.trim();
+  if(!apiKey){showToast('API Key is required');return;}
+  setConfig({apiKey:apiKey,binId:binId||null});
+  document.getElementById('setupModal').classList.remove('open');
+  showToast('Cloud config saved'+(binId?'' :' - click Save to create your cloud bin'));
+  if(binId)updateSaveStatus('Connected','rgba(34,197,94,.9)');
+  else updateSaveStatus('Ready','rgba(255,255,255,.5)');
+}
+
+// ---- FILE BACKUP ----
+function exportToFile(){
+  const state=gatherState();
+  const json=JSON.stringify(state,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='ria_schedule_state_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('JSON backup downloaded');
+}
+
+function loadFromFile(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const state=JSON.parse(e.target.result);
+      if(!state||state.version!==4){showToast('Invalid save file');return;}
+      applyState(state);
+      autoSave();
+      showToast('Loaded from '+file.name);
+    }catch(err){showToast('Error: '+err.message);}
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+// Init
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closePanel();
+    document.getElementById('alertDropdown').classList.remove('open');
+  }
+});
+document.addEventListener('click',e=>{
+  const dd=document.getElementById('alertDropdown');
+  const badge=document.getElementById('alertBadge');
+  if(dd.classList.contains('open')&&!dd.contains(e.target)&&!badge.contains(e.target)){
+    dd.classList.remove('open');
+  }
+});
+document.getElementById('updatedSpan').textContent=fmtDate(TODAY);
+(function(){
+  const totalDaysNTP=Math.ceil((TARGET_DATE-NTP_DATE)/864e5);
+  const daysLeft=Math.ceil((TARGET_DATE-TODAY)/864e5);
+  const elapsed=totalDaysNTP-daysLeft;
+  const c=document.getElementById('countdownChip');
+  if(daysLeft>0){c.className='countdown-chip chip-amber';c.textContent=daysLeft+' DAYS TO PAVING (Day '+elapsed+' of '+totalDaysNTP+')'}
+  else if(daysLeft===0){c.className='countdown-chip chip-green';c.textContent='PAVING TARGET DAY'}
+  else{c.className='countdown-chip chip-red';c.textContent=Math.abs(daysLeft)+' DAYS PAST PAVING TARGET'}
+})();
+buildStatusFilters();
+
+// Boot sequence: try cloud first, fall back to localStorage
+(async function boot(){
+  const cfg=getConfig();
+  let loaded=false;
+  if(cfg.apiKey&&cfg.binId){
+    loaded=await cloudLoad();
+  }
+  if(!loaded){
+    loaded=autoLoad();
+    if(loaded)updateSaveStatus('Local only','rgba(255,255,255,.4)');
+  }
+  if(!loaded){
+    renderGantt();
+    renderSummary();
+  }
+  if(!cfg.apiKey)updateSaveStatus('Not connected','rgba(255,255,255,.3)');
+  _initialized=true;
+})();
+
+// Redraw deps on scroll
+document.getElementById('ganttWrap').addEventListener('scroll',function(){
+  if(depsActive)drawDependencies();
+});
+window.addEventListener('resize',function(){
+  if(depsActive)drawDependencies();
+});
+</script>
+</body>
+</html>
