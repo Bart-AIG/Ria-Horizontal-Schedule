@@ -1627,7 +1627,7 @@ function changeStatus(idx,newStatus){
   t.status=newStatus;
   const btMap={'COMPLETE':'complete','COMPLETE (LATE)':'complete','IN PROGRESS':'inprogress','ACTIVE':'inprogress','SUBST. COMPLETE':'inprogress','PENDING':'pending','BLOCKED':'blocked','ACTION NEEDED':'blocked'};
   t.bt=btMap[newStatus]||'pending';
-  renderGantt();
+  cascadeDelays();render();updateDelayBar();
   openPanel(idx);
   showToast('Status updated to '+newStatus);
 }
