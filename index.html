@@ -335,12 +335,12 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 const EDIT_MODE=new URLSearchParams(window.location.search).get('mode')==='edit';
 
 function D(m,d){return new Date(2026,m-1,d)}
-const START_DATE=new Date(2026,2,17);
-const _ORIG_END=new Date(2026,11,7);
+const START_DATE=new Date(2026,2,15);
+const _ORIG_END=new Date(2026,10,15);
 const TODAY=(function(){const d=new Date();d.setHours(0,0,0,0);return d})();
 const END_DATE=TODAY>_ORIG_END?new Date(TODAY.getTime()+14*864e5):_ORIG_END;
 const NTP_DATE=D(4,3);
-const TARGET_DATE=D(10,5);
+const TARGET_DATE=D(9,4);
 const TOTAL_DAYS=Math.ceil((END_DATE-START_DATE)/864e5);
 const DAY_W=4.8;
 const TOTAL_BID=4146104.60;
@@ -423,11 +423,12 @@ function calculateDelayCost(delayDays){
 }
 
 // Updated per JL Gray email: -20 (structures off CP, outside street), +34 (tie-ins/inlet tops), +23 (crossings gate paving)
-const CRITICAL_PATH=[8,9,10,13,14,15,16,23,27,28,31,32,33,34,35,36,37,38,39,40,41];
-const NEAR_CRITICAL=[21,22];
+const CRITICAL_PATH=[8,9,10,13,14,15,16,27,28,31,32,33,34,35,36,37,38,39,40,41];
+const NEAR_CRITICAL=[22,23,24,25];
 
 // Cost line item breakdowns per task
 const COST_ITEMS={
+  7:[],
   4:[
     {item:"A-2",desc:"Reinforced filter fabric fence (5,910 LF)",amt:14775.00},
     {item:"A-3",desc:"Stabilized construction access (1 EA)",amt:2185.00},
@@ -533,7 +534,7 @@ const COST_ITEMS={
     {item:"D&E-7",desc:"Dry stack retaining wall (1,169 FF)",amt:39161.50},
     {item:"D&E-8",desc:"Structural retaining wall (1,658 FF)",amt:63418.50}
   ],
-  21:[],22:[],23:[],24:[],25:[],
+  22:[],23:[],24:[],25:[],
   27:[
     {item:"A-1",desc:"Concrete washout area",amt:1065.00},
     {item:"A-9",desc:"Haul off trash and debris",amt:20000.00}
@@ -612,69 +613,68 @@ function taskCost(id){
 }
 
 const tasks=[
-  // PHASE 1: PRECONSTRUCTION ACTIVITY
+  // PHASE 0: PRECONSTRUCTION ACTIVITY (Baseline: 155-Day Schedule 4/8/26)
   {type:"phase",wbs:"0.0",name:"Preconstruction Activity",phaseKey:"p0"},
-  {id:3,wbs:"0.1",name:"Internal Precon",consultant:"AIG",ck:"owner",ps:D(3,17),pe:D(3,17),as:D(3,17),ae:D(3,17),status:"COMPLETE",bt:"milestone",pred:[],notes:"Internal preconstruction kickoff. Milestone marking project start.",source:"Schedule 4/1/26",phase:"p0",dur:0,cp:false},
-  {id:4,wbs:"0.2",name:"Erosion Controls",consultant:"JL Gray",ck:"gc",ps:D(3,19),pe:D(3,23),as:D(3,19),ae:D(3,23),status:"COMPLETE",bt:"complete",pred:[3],notes:"SWPPP erosion controls installed. 3-day duration. Required before any land disturbance.",source:"Schedule 4/1/26",phase:"p0",dur:3,cp:false},
-  {id:5,wbs:"0.3",name:"Manhole Lead Time 4 Weeks",consultant:"JL Gray",ck:"gc",ps:D(3,26),pe:D(4,22),as:D(3,26),ae:null,status:"IN PROGRESS",bt:"inprogress",pred:[3],notes:"4-week lead time for precast manhole procurement. 27 sanitary sewer manholes + 15 storm manholes. Must arrive before wet utility installation begins.",source:"Schedule 4/1/26",phase:"p0",dur:24,cp:false},
-  {id:6,wbs:"0.4",name:"Contract",consultant:"AIG/JL Gray",ck:"owner",ps:D(4,3),pe:D(4,3),as:D(4,3),ae:D(4,3),status:"COMPLETE",bt:"milestone",pred:[3],notes:"Contract execution milestone. NTP issued 4/3/2026.",source:"Schedule 4/1/26",phase:"p0",dur:0,cp:false},
+  {id:6,wbs:"0.1",name:"Contract",consultant:"AIG/JL Gray",ck:"owner",ps:D(3,20),pe:D(3,20),as:D(4,3),ae:D(4,3),status:"COMPLETE",bt:"milestone",pred:[],notes:"Contract execution milestone. NTP issued 4/3/2026. Baseline was 3/20; executed 14 days late.",source:"155-Day Schedule 4/8/26",phase:"p0",dur:0,cp:false},
+  {id:4,wbs:"0.2",name:"Erosion Controls",consultant:"JL Gray",ck:"gc",ps:D(3,28),pe:D(4,1),as:D(3,19),ae:D(3,23),status:"COMPLETE",bt:"complete",pred:[6],notes:"SWPPP erosion controls installed. 3-day duration. Completed ahead of baseline (3/28-4/1). Actual: 3/19-3/23.",source:"155-Day Schedule 4/8/26",phase:"p0",dur:3,cp:false},
+  {id:7,wbs:"0.3",name:"City/County Precon",consultant:"AIG/JL Gray",ck:"owner",ps:D(4,2),pe:D(4,2),as:D(4,2),ae:D(4,2),status:"COMPLETE",bt:"milestone",pred:[6],notes:"City/County preconstruction meeting milestone.",source:"155-Day Schedule 4/8/26",phase:"p0",dur:0,cp:false},
+  {id:5,wbs:"0.4",name:"Manhole Lead Time 4 Weeks",consultant:"JL Gray",ck:"gc",ps:D(3,21),pe:D(4,17),as:D(3,26),ae:null,status:"IN PROGRESS",bt:"inprogress",pred:[6],notes:"4-week lead time for precast manhole procurement. 27 sanitary sewer manholes + 15 storm manholes. Must arrive before wet utility installation begins. Baseline end: 4/17.",source:"155-Day Schedule 4/8/26",phase:"p0",dur:24,cp:false},
 
-  // PHASE 2: EARTHWORK
-  {type:"phase",wbs:"1.0",name:"Earthwork",phaseKey:"p1"},
-  {id:8,wbs:"1.1",name:"Clear, Grind & Haul",consultant:"JL Gray",ck:"gc",ps:D(4,3),pe:D(4,6),as:D(4,3),ae:null,status:"IN PROGRESS",bt:"inprogress",pred:[6],notes:"Site clearing, grinding, and hauling. 3-day duration. First activity after contract execution.",source:"Schedule 4/1/26",phase:"p1",projEnd:D(4,6),dur:3,cp:true},
-  {id:9,wbs:"1.2",name:"Excavation",consultant:"JL Gray",ck:"gc",ps:D(4,6),pe:D(4,28),as:null,ae:null,status:"PENDING",bt:"pending",pred:[8],notes:"20-day mass excavation. Includes lot excavation (9,657 CY), pond excavation (9,226 CY), roadway excavation, and off-site disposal (6,005 CY).",source:"Schedule 4/1/26",phase:"p1",dur:20,cp:true},
-  {id:10,wbs:"1.3",name:"Embankment",consultant:"JL Gray",ck:"gc",ps:D(4,6),pe:D(4,28),as:null,ae:null,status:"PENDING",bt:"pending",pred:[8],notes:"20-day embankment. Includes lot fill (28,002 CY), pond embankment, and roadway embankment. Runs parallel with excavation.",source:"Schedule 4/1/26",phase:"p1",dur:20,cp:true},
-  {id:11,wbs:"1.4",name:"Moisture Condition Pads",consultant:"JL Gray",ck:"gc",ps:D(4,29),pe:D(5,21),as:null,ae:null,status:"PENDING",bt:"pending",pred:[9,10],notes:"20-day moisture conditioning of building pads. Lot fill (19,310 CY) and pond (6,633 CY). Must complete before fine grading.",source:"Schedule 4/1/26",phase:"p1",dur:20,cp:false},
+  // PHASE 1: ROUGH CUT (Baseline: 155-Day Schedule 4/8/26)
+  {type:"phase",wbs:"1.0",name:"Rough Cut",phaseKey:"p1"},
+  {id:8,wbs:"1.1",name:"Clear, Grind & Haul",consultant:"JL Gray",ck:"gc",ps:D(4,3),pe:D(4,4),as:D(4,3),ae:null,status:"IN PROGRESS",bt:"inprogress",pred:[6],notes:"Site clearing, grinding, and hauling. 1-day duration per 155-day schedule. First activity after contract execution.",source:"155-Day Schedule 4/8/26",phase:"p1",projEnd:D(4,4),dur:1,cp:true},
+  {id:9,wbs:"1.2",name:"Excavation",consultant:"JL Gray",ck:"gc",ps:D(4,6),pe:D(4,27),as:null,ae:null,status:"PENDING",bt:"pending",pred:[8],notes:"20-day mass excavation. Includes lot excavation (9,657 CY), pond excavation (9,226 CY), roadway excavation, and off-site disposal (6,005 CY).",source:"155-Day Schedule 4/8/26",phase:"p1",dur:20,cp:true},
+  {id:10,wbs:"1.3",name:"Embankment",consultant:"JL Gray",ck:"gc",ps:D(4,6),pe:D(4,27),as:null,ae:null,status:"PENDING",bt:"pending",pred:[8],notes:"20-day embankment. Includes lot fill (28,002 CY), pond embankment, and roadway embankment. Runs parallel with excavation.",source:"155-Day Schedule 4/8/26",phase:"p1",dur:20,cp:true},
+  {id:11,wbs:"1.4",name:"Moisture Condition Pads",consultant:"JL Gray",ck:"gc",ps:D(4,28),pe:D(5,20),as:null,ae:null,status:"PENDING",bt:"pending",pred:[9,10],notes:"20-day moisture conditioning of building pads. Lot fill (19,310 CY) and pond (6,633 CY). Must complete before fine grading.",source:"155-Day Schedule 4/8/26",phase:"p1",dur:20,cp:false},
 
-  // PHASE 3: WET UTILITIES
+  // PHASE 2: WET UTILITIES (Baseline: 155-Day Schedule 4/8/26)
   {type:"phase",wbs:"2.0",name:"Wet Utilities",phaseKey:"p2"},
-  {id:13,wbs:"2.1",name:"Trenching",consultant:"JL Gray",ck:"gc",ps:D(4,24),pe:D(6,1),as:null,ae:null,status:"PENDING",bt:"pending",pred:[8],notes:"31-day utility trenching for all wet utilities (storm, water, wastewater). Longest single activity in wet utilities phase. Trench safety costs allocated here.",source:"Schedule 4/1/26",phase:"p2",dur:31,cp:true},
-  {id:14,wbs:"2.2",name:"Wastewater*",consultant:"JL Gray (Sub)",ck:"gc",ps:D(5,18),pe:D(6,12),as:null,ae:null,status:"PENDING",bt:"pending",pred:[13],notes:"21-day wastewater installation. 6\" and 8\" PVC SDR-26 sewer pipe, 27 manholes, 150 services (100 single + 50 double). Includes CoRR manhole connection.",source:"Schedule 4/1/26",phase:"p2",dur:21,cp:true},
-  {id:15,wbs:"2.3",name:"Water*",consultant:"JL Gray (Sub)",ck:"gc",ps:D(6,13),pe:D(6,30),as:null,ae:null,status:"PENDING",bt:"pending",pred:[14],notes:"15-day water line installation. 2\", 6\", 8\" PVC C-900 waterlines, 9 fire hydrants, 48 gate valves, 150 services, meter, backflow preventer. 16\" wet connect to existing main.",source:"Schedule 4/1/26",phase:"p2",dur:15,cp:true},
-  {id:16,wbs:"2.4",name:"Storm Sewer*",consultant:"JL Gray (Sub)",ck:"gc",ps:D(7,1),pe:D(7,16),as:null,ae:null,status:"PENDING",bt:"pending",pred:[15],notes:"12-day storm sewer installation. 18\"-42\" HDPE and 24\" RCP pipe, headwalls, riprap, pilot channel, overflow weir.",source:"Schedule 4/1/26",phase:"p2",dur:12,cp:true},
-  {id:17,wbs:"2.5",name:"Water Testing",consultant:"Jonah Water/JL Gray",ck:"gc",ps:D(7,1),pe:D(7,8),as:null,ae:null,status:"PENDING",bt:"pending",pred:[15],notes:"4-day water testing. Pressure tests and bacteriological sampling required by Jonah Water SUD before acceptance.",source:"Schedule 4/1/26",phase:"p2",dur:4,cp:false},
-  {id:18,wbs:"2.6",name:"Bac Tees",consultant:"Jonah Water/JL Gray",ck:"gc",ps:D(7,9),pe:D(7,11),as:null,ae:null,status:"PENDING",bt:"pending",pred:[17],notes:"3-day bacteriological testing. Required before water tie-ins can proceed.",source:"Schedule 4/1/26",phase:"p2",dur:3,cp:false},
-  {id:19,wbs:"2.7",name:"Water Tie-ins",consultant:"Jonah Water/JL Gray",ck:"gc",ps:D(7,13),pe:D(7,16),as:null,ae:null,status:"PENDING",bt:"pending",pred:[18],notes:"3-day water tie-in connections. Final connections to existing Jonah Water system.",source:"Schedule 4/1/26",phase:"p2",dur:3,cp:false},
-  {id:20,wbs:"2.8",name:"Structures",consultant:"JL Gray",ck:"gc",ps:D(7,17),pe:D(7,28),as:null,ae:null,status:"PENDING",bt:"pending",pred:[16,19],notes:"9-day drainage structures installation. 15 storm manholes (4'-7'), 25 curb inlets (5'-15'), area inlet, landscape stubs, overflow weir, level spreader, pilot channel. OFF CRITICAL PATH per JL Gray - headwalls, dissipators, and SETs are located outside the street and do not gate paving.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p2",dur:9,cp:false},
+  {id:13,wbs:"2.1",name:"Trenching",consultant:"JL Gray",ck:"gc",ps:D(4,20),pe:D(5,26),as:null,ae:null,status:"PENDING",bt:"pending",pred:[8],notes:"31-day utility trenching for all wet utilities (storm, water, wastewater). Longest single activity in wet utilities phase. Trench safety costs allocated here.",source:"155-Day Schedule 4/8/26",phase:"p2",dur:31,cp:true},
+  {id:14,wbs:"2.2",name:"Wastewater*",consultant:"JL Gray (Sub)",ck:"gc",ps:D(5,5),pe:D(5,30),as:null,ae:null,status:"PENDING",bt:"pending",pred:[13],notes:"21-day wastewater installation. 6\" and 8\" PVC SDR-26 sewer pipe, 27 manholes, 150 services (100 single + 50 double). Includes CoRR manhole connection.",source:"155-Day Schedule 4/8/26",phase:"p2",dur:21,cp:true},
+  {id:15,wbs:"2.3",name:"Water*",consultant:"JL Gray (Sub)",ck:"gc",ps:D(6,1),pe:D(6,17),as:null,ae:null,status:"PENDING",bt:"pending",pred:[14],notes:"15-day water line installation. 2\", 6\", 8\" PVC C-900 waterlines, 9 fire hydrants, 48 gate valves, 150 services, meter, backflow preventer. 16\" wet connect to existing main.",source:"155-Day Schedule 4/8/26",phase:"p2",dur:15,cp:true},
+  {id:16,wbs:"2.4",name:"Storm Sewer*",consultant:"JL Gray (Sub)",ck:"gc",ps:D(6,18),pe:D(7,1),as:null,ae:null,status:"PENDING",bt:"pending",pred:[15],notes:"12-day storm sewer installation. 18\"-42\" HDPE and 24\" RCP pipe, headwalls, riprap, pilot channel, overflow weir.",source:"155-Day Schedule 4/8/26",phase:"p2",dur:12,cp:true},
+  {id:17,wbs:"2.5",name:"Water Testing",consultant:"Jonah Water/JL Gray",ck:"gc",ps:D(6,18),pe:D(6,23),as:null,ae:null,status:"PENDING",bt:"pending",pred:[15],notes:"4-day water testing. Pressure tests and bacteriological sampling required by Jonah Water SUD before acceptance.",source:"155-Day Schedule 4/8/26",phase:"p2",dur:4,cp:false},
+  {id:18,wbs:"2.6",name:"Bac Tees",consultant:"Jonah Water/JL Gray",ck:"gc",ps:D(6,24),pe:D(6,26),as:null,ae:null,status:"PENDING",bt:"pending",pred:[17],notes:"3-day bacteriological testing. Required before water tie-ins can proceed.",source:"155-Day Schedule 4/8/26",phase:"p2",dur:3,cp:false},
+  {id:19,wbs:"2.7",name:"Water Tie-ins",consultant:"Jonah Water/JL Gray",ck:"gc",ps:D(6,27),pe:D(7,1),as:null,ae:null,status:"PENDING",bt:"pending",pred:[18],notes:"3-day water tie-in connections. Final connections to existing Jonah Water system.",source:"155-Day Schedule 4/8/26",phase:"p2",dur:3,cp:false},
+  {id:20,wbs:"2.8",name:"Structures",consultant:"JL Gray",ck:"gc",ps:D(7,2),pe:D(7,14),as:null,ae:null,status:"PENDING",bt:"pending",pred:[16,19],notes:"9-day drainage structures installation. 15 storm manholes (4'-7'), 25 curb inlets (5'-15'), area inlet, landscape stubs, overflow weir, level spreader, pilot channel. OFF CRITICAL PATH per JL Gray - headwalls, dissipators, and SETs are located outside the street and do not gate paving.",source:"155-Day Schedule 4/8/26 + JL Gray email 4/6/26",phase:"p2",dur:9,cp:false},
 
-  // PHASE 4: DRY UTILITIES (NOT IN CONTRACT)
+  // PHASE 3: DRY UTILITIES - NOT IN CONTRACT (Baseline: 155-Day Schedule 4/8/26)
   {type:"phase",wbs:"3.0",name:"Dry Utilities (Not in Contract)",phaseKey:"p3"},
-  {id:21,wbs:"3.1",name:"Dry Utilities (Not in Contract)",consultant:"Utility Provider",ck:"utility",ps:D(5,12),pe:D(9,25),as:null,ae:null,status:"PENDING",bt:"pending",pred:[],notes:"118-day duration. NOT IN CONTRACT - dependent on utility provider schedule. Near-critical path with ~10-12 days of float. No cost to JL Gray contract.",source:"Schedule 4/1/26",phase:"p3",dur:118,cp:false,ncp:true},
-  {id:22,wbs:"3.2",name:"Dry Trenching (Pending Plans)",consultant:"Utility Provider",ck:"utility",ps:D(5,12),pe:D(6,4),as:null,ae:null,status:"PENDING",bt:"pending",pred:[13],notes:"20-day dry trenching. Linked to wet trenching (ID 13) per JL Gray - dry trenchers move in 14-20 days after wet utility trenching starts. Pending approved plans from utility provider. No cost to JL Gray contract.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p3",dur:20,cp:false,ncp:true},
-  {id:23,wbs:"3.3",name:"Crossings",consultant:"Utility Provider",ck:"utility",ps:D(7,22),pe:D(8,1),as:null,ae:null,status:"PENDING",bt:"pending",pred:[22],notes:"10-day dry utility crossings. CRITICAL PATH per JL Gray - must be installed before street construction can proceed. Coordination with wet utilities required.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p3",dur:10,cp:true},
-  {id:24,wbs:"3.4",name:"Main",consultant:"Utility Provider",ck:"utility",ps:D(8,3),pe:D(9,4),as:null,ae:null,status:"PENDING",bt:"pending",pred:[23],notes:"30-day main dry utility installation.",source:"Schedule 4/1/26",phase:"p3",dur:30,cp:false},
-  {id:25,wbs:"3.5",name:"Transformer Pads",consultant:"Utility Provider",ck:"utility",ps:D(9,8),pe:D(9,25),as:null,ae:null,status:"PENDING",bt:"pending",pred:[24],notes:"15-day transformer pad installation. Last activity in dry utility phase.",source:"Schedule 4/1/26",phase:"p3",dur:15,cp:false},
+  {id:22,wbs:"3.1",name:"Dry Trenching (Pending Plans)",consultant:"Utility Provider",ck:"utility",ps:D(4,30),pe:D(5,22),as:null,ae:null,status:"PENDING",bt:"pending",pred:[13],notes:"20-day dry trenching. Linked to wet trenching (ID 13) per JL Gray - dry trenchers move in 14-20 days after wet utility trenching starts. Pending approved plans from utility provider. No cost to JL Gray contract.",source:"155-Day Schedule 4/8/26",phase:"p3",dur:20,cp:false,ncp:true},
+  {id:23,wbs:"3.2",name:"Crossings",consultant:"Utility Provider",ck:"utility",ps:D(7,9),pe:D(7,20),as:null,ae:null,status:"PENDING",bt:"pending",pred:[22],notes:"10-day dry utility crossings. Must be installed before street construction can proceed. Coordination with wet utilities required.",source:"155-Day Schedule 4/8/26",phase:"p3",dur:10,cp:false},
+  {id:24,wbs:"3.3",name:"Main",consultant:"Utility Provider",ck:"utility",ps:D(7,21),pe:D(8,22),as:null,ae:null,status:"PENDING",bt:"pending",pred:[23],notes:"30-day main dry utility installation.",source:"155-Day Schedule 4/8/26",phase:"p3",dur:30,cp:false},
+  {id:25,wbs:"3.4",name:"Transformer Pads",consultant:"Utility Provider",ck:"utility",ps:D(8,24),pe:D(9,11),as:null,ae:null,status:"PENDING",bt:"pending",pred:[24],notes:"15-day transformer pad installation. Last activity in dry utility phase.",source:"155-Day Schedule 4/8/26",phase:"p3",dur:15,cp:false},
 
-  // PHASE 5: STREET CONSTRUCTION
+  // PHASE 4: STREET CONSTRUCTION (Baseline: 155-Day Schedule 4/8/26)
   {type:"phase",wbs:"4.0",name:"Street Construction",phaseKey:"p4"},
-  {id:27,wbs:"4.1",name:"Utility Spoils Cleanup",consultant:"JL Gray",ck:"gc",ps:D(7,17),pe:D(7,21),as:null,ae:null,status:"PENDING",bt:"pending",pred:[16],notes:"3-day cleanup after wet utility work. Concrete washout area and debris removal. Predecessor updated from Structures (20) to Storm Sewer (16) since structures are outside street per JL Gray.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p4",dur:3,cp:true},
-  {id:28,wbs:"4.2",name:"Subgrade Prep - Lime (Turn Lane)",consultant:"JL Gray",ck:"gc",ps:D(8,3),pe:D(8,5),as:null,ae:null,status:"PENDING",bt:"pending",pred:[27,23],notes:"2-day subgrade prep and lime stabilization for Limmer Loop Turn Lane. Includes ROW preparation, 10\" lime stabilization, and traffic control. Dry utility crossings (23) must be complete before street construction per JL Gray.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p4",dur:2,cp:true},
-  {id:29,wbs:"4.3",name:"Process Lime - First Mix (Turn Lane)",consultant:"JL Gray",ck:"gc",ps:D(8,6),pe:D(8,8),as:null,ae:null,status:"PENDING",bt:"pending",pred:[28],notes:"2-day first lime mix processing for turn lane.",source:"Schedule 4/1/26",phase:"p4",dur:2,cp:false},
-  {id:30,wbs:"4.4",name:"Process Lime - Second Mix (Turn Lane)",consultant:"JL Gray",ck:"gc",ps:D(8,10),pe:D(8,12),as:null,ae:null,status:"PENDING",bt:"pending",pred:[29],notes:"2-day second lime mix processing for turn lane.",source:"Schedule 4/1/26",phase:"p4",dur:2,cp:false},
-  {id:31,wbs:"4.5",name:"Subgrade Prep",consultant:"JL Gray",ck:"gc",ps:D(8,5),pe:D(8,18),as:null,ae:null,status:"PENDING",bt:"pending",pred:[28],notes:"12-day subgrade preparation for all roadways. 24,455 SY at $2.50/SY.",source:"Schedule 4/1/26",phase:"p4",dur:12,cp:true},
-  {id:32,wbs:"4.6",name:"1st Course Base",consultant:"JL Gray",ck:"gc",ps:D(8,19),pe:D(8,26),as:null,ae:null,status:"PENDING",bt:"pending",pred:[31],notes:"6-day first course base installation. 8\" crushed limestone (4,797 SY) and 10\" crushed limestone (19,658 SY).",source:"Schedule 4/1/26",phase:"p4",dur:6,cp:true},
-  {id:33,wbs:"4.7",name:"Curb and Gutter",consultant:"JL Gray",ck:"gc",ps:D(8,24),pe:D(9,1),as:null,ae:null,status:"PENDING",bt:"pending",pred:[32],notes:"7-day curb and gutter installation. 11,383 LF of 4\" roll curb, 80 LF saw tooth curb, 2 Type 2 driveways.",source:"Schedule 4/1/26",phase:"p4",dur:7,cp:true},
-  {id:34,wbs:"4.8",name:"Tie-ins and Inlet Tops",consultant:"JL Gray",ck:"gc",ps:D(9,2),pe:D(9,9),as:null,ae:null,status:"PENDING",bt:"pending",pred:[33],notes:"5-day utility tie-ins and inlet top installation. CRITICAL PATH per JL Gray - covers handwork by concrete subcontractor for curb, gutter, and inlets. Must complete before 2nd Course Base.",source:"Schedule 4/1/26 + JL Gray email 4/6/26",phase:"p4",dur:5,cp:true},
-  {id:35,wbs:"4.9",name:"Backfill Curb",consultant:"JL Gray",ck:"gc",ps:D(8,28),pe:D(9,11),as:null,ae:null,status:"PENDING",bt:"pending",pred:[33],notes:"11-day curb backfill. Labor included in curb/gutter unit prices.",source:"Schedule 4/1/26",phase:"p4",dur:11,cp:true},
-  {id:36,wbs:"4.10",name:"2nd Course Base",consultant:"JL Gray",ck:"gc",ps:D(9,9),pe:D(9,14),as:null,ae:null,status:"PENDING",bt:"pending",pred:[34,35],notes:"4-day second course base. Quantity included in 1st Course Base bid totals; tracked separately for schedule sequencing.",source:"Schedule 4/1/26",phase:"p4",dur:4,cp:true},
-  {id:37,wbs:"4.11",name:"Finish Base",consultant:"JL Gray",ck:"gc",ps:D(9,15),pe:D(9,25),as:null,ae:null,status:"PENDING",bt:"pending",pred:[36],notes:"9-day finish base preparation. Final trimming and grading of base surface prior to paving.",source:"Schedule 4/1/26",phase:"p4",dur:9,cp:true},
-  {id:38,wbs:"4.12",name:"Fine Grade Pads",consultant:"JL Gray",ck:"gc",ps:D(9,26),pe:D(10,7),as:null,ae:null,status:"PENDING",bt:"pending",pred:[37],notes:"10-day fine grading of building pads. Final grade for vertical construction readiness. Labor included in earthwork/drainage unit prices per bid notes.",source:"Schedule 4/1/26",phase:"p4",dur:10,cp:true},
-  {id:39,wbs:"4.13",name:"Raise Castings",consultant:"JL Gray",ck:"gc",ps:D(9,25),pe:D(9,30),as:null,ae:null,status:"PENDING",bt:"pending",pred:[37],notes:"5-day raising of manholes and castings to final grade. 15 drainage MH + 27 sewer MH vertical adjustments.",source:"Schedule 4/1/26",phase:"p4",dur:5,cp:true},
-  {id:40,wbs:"4.14",name:"Prepave",consultant:"JL Gray",ck:"gc",ps:D(10,1),pe:D(10,2),as:null,ae:null,status:"PENDING",bt:"pending",pred:[38,39],notes:"1-day pre-pave preparation. Utility adjustments, construction staking, final checks.",source:"Schedule 4/1/26",phase:"p4",dur:1,cp:true},
-  {id:41,wbs:"4.15",name:"Paving",consultant:"JL Gray",ck:"gc",ps:D(10,3),pe:D(10,5),as:null,ae:null,status:"PENDING",bt:"pending",pred:[40],notes:"1-day paving. 2\" and 2.5\" HMAC surface course for all roads, turn lane base and HMAC, fire lane striping, signage, pavement connections.",source:"Schedule 4/1/26",phase:"p4",dur:1,cp:true},
+  {id:27,wbs:"4.1",name:"Utility Spoils Cleanup",consultant:"JL Gray",ck:"gc",ps:D(7,2),pe:D(7,8),as:null,ae:null,status:"PENDING",bt:"pending",pred:[16],notes:"3-day cleanup after wet utility work. Concrete washout area and debris removal.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:3,cp:true},
+  {id:28,wbs:"4.2",name:"Subgrade Prep - Lime (Turn Lane)",consultant:"JL Gray",ck:"gc",ps:D(7,21),pe:D(7,23),as:null,ae:null,status:"PENDING",bt:"pending",pred:[27],notes:"2-day subgrade prep and lime stabilization for Limmer Loop Turn Lane. Includes ROW preparation, 10\" lime stabilization, and traffic control.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:2,cp:true},
+  {id:29,wbs:"4.3",name:"Process Lime - First Mix (Turn Lane)",consultant:"JL Gray",ck:"gc",ps:D(7,24),pe:D(7,27),as:null,ae:null,status:"PENDING",bt:"pending",pred:[28],notes:"2-day first lime mix processing for turn lane.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:2,cp:false},
+  {id:30,wbs:"4.4",name:"Process Lime - Second Mix (Turn Lane)",consultant:"JL Gray",ck:"gc",ps:D(7,28),pe:D(7,30),as:null,ae:null,status:"PENDING",bt:"pending",pred:[29],notes:"2-day second lime mix processing for turn lane.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:2,cp:false},
+  {id:31,wbs:"4.5",name:"Subgrade Prep",consultant:"JL Gray",ck:"gc",ps:D(7,23),pe:D(8,5),as:null,ae:null,status:"PENDING",bt:"pending",pred:[28],notes:"12-day subgrade preparation for all roadways. 24,455 SY at $2.50/SY.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:12,cp:true},
+  {id:32,wbs:"4.6",name:"1st Course Base",consultant:"JL Gray",ck:"gc",ps:D(8,3),pe:D(8,8),as:null,ae:null,status:"PENDING",bt:"pending",pred:[31],notes:"6-day first course base installation. 8\" crushed limestone (4,797 SY) and 10\" crushed limestone (19,658 SY).",source:"155-Day Schedule 4/8/26",phase:"p4",dur:6,cp:true},
+  {id:33,wbs:"4.7",name:"Curb and Gutter",consultant:"JL Gray",ck:"gc",ps:D(8,5),pe:D(8,13),as:null,ae:null,status:"PENDING",bt:"pending",pred:[32],notes:"7-day curb and gutter installation. 11,383 LF of 4\" roll curb, 80 LF saw tooth curb, 2 Type 2 driveways.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:7,cp:true},
+  {id:34,wbs:"4.8",name:"Tie-ins and Inlet Tops",consultant:"JL Gray",ck:"gc",ps:D(8,14),pe:D(8,20),as:null,ae:null,status:"PENDING",bt:"pending",pred:[33],notes:"5-day utility tie-ins and inlet top installation. Covers handwork by concrete subcontractor for curb, gutter, and inlets. Must complete before 2nd Course Base.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:5,cp:true},
+  {id:35,wbs:"4.9",name:"Backfill Curb",consultant:"JL Gray",ck:"gc",ps:D(8,10),pe:D(8,21),as:null,ae:null,status:"PENDING",bt:"pending",pred:[33],notes:"11-day curb backfill. Labor included in curb/gutter unit prices.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:11,cp:true},
+  {id:36,wbs:"4.10",name:"2nd Course Base",consultant:"JL Gray",ck:"gc",ps:D(8,18),pe:D(8,21),as:null,ae:null,status:"PENDING",bt:"pending",pred:[34,35],notes:"4-day second course base. Quantity included in 1st Course Base bid totals; tracked separately for schedule sequencing.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:4,cp:true},
+  {id:37,wbs:"4.11",name:"Finish Base",consultant:"JL Gray",ck:"gc",ps:D(8,21),pe:D(8,31),as:null,ae:null,status:"PENDING",bt:"pending",pred:[36],notes:"9-day finish base preparation. Final trimming and grading of base surface prior to paving.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:9,cp:true},
+  {id:38,wbs:"4.12",name:"Fine Grade Pads",consultant:"JL Gray",ck:"gc",ps:D(9,1),pe:D(9,14),as:null,ae:null,status:"PENDING",bt:"pending",pred:[37],notes:"10-day fine grading of building pads. Final grade for vertical construction readiness.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:10,cp:true},
+  {id:39,wbs:"4.13",name:"Raise Castings",consultant:"JL Gray",ck:"gc",ps:D(8,26),pe:D(9,1),as:null,ae:null,status:"PENDING",bt:"pending",pred:[37],notes:"5-day raising of manholes and castings to final grade. 15 drainage MH + 27 sewer MH vertical adjustments.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:5,cp:true},
+  {id:40,wbs:"4.14",name:"Prepave",consultant:"JL Gray",ck:"gc",ps:D(9,2),pe:D(9,2),as:null,ae:null,status:"PENDING",bt:"milestone",pred:[38,39],notes:"Pre-pave inspection milestone. Utility adjustments, construction staking, final checks.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:0,cp:true},
+  {id:41,wbs:"4.15",name:"Paving",consultant:"JL Gray",ck:"gc",ps:D(9,3),pe:D(9,4),as:null,ae:null,status:"PENDING",bt:"pending",pred:[40],notes:"1-day paving. 2\" and 2.5\" HMAC surface course for all roads, turn lane base and HMAC, fire lane striping, signage, pavement connections.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:1,cp:true},
 
-  // PHASE 6: CLOSE OUT
+  // PHASE 5: CLOSE OUT (Baseline: 155-Day Schedule 4/8/26)
   {type:"phase",wbs:"5.0",name:"Close Out",phaseKey:"p5"},
-  {id:43,wbs:"5.1",name:"Clean Up",consultant:"JL Gray",ck:"gc",ps:D(10,6),pe:D(10,14),as:null,ae:null,status:"PENDING",bt:"pending",pred:[41],notes:"7-day site cleanup after paving completion.",source:"Schedule 4/1/26",phase:"p5",dur:7,cp:false},
-  {id:44,wbs:"5.2",name:"Signs and Striping",consultant:"JL Gray",ck:"gc",ps:D(10,15),pe:D(10,17),as:null,ae:null,status:"PENDING",bt:"pending",pred:[43],notes:"3-day signage and striping installation.",source:"Schedule 4/1/26",phase:"p5",dur:3,cp:false},
-  {id:45,wbs:"5.3",name:"Reveg",consultant:"JL Gray",ck:"gc",ps:D(10,15),pe:D(10,20),as:null,ae:null,status:"PENDING",bt:"pending",pred:[43],notes:"5-day revegetation. Broadcast seed (19.33 Ac).",source:"Schedule 4/1/26",phase:"p5",dur:5,cp:false},
-  {id:46,wbs:"5.4",name:"Walk Through",consultant:"All Parties",ck:"owner",ps:D(10,21),pe:D(10,21),as:null,ae:null,status:"PENDING",bt:"milestone",pred:[44,45],notes:"Walk-through inspection milestone. All close-out activities must be complete.",source:"Schedule 4/1/26",phase:"p5",dur:0,cp:false},
-  {id:47,wbs:"5.5",name:"Punchlist",consultant:"JL Gray",ck:"gc",ps:D(10,22),pe:D(10,28),as:null,ae:null,status:"PENDING",bt:"pending",pred:[46],notes:"5-day punchlist completion after walk-through.",source:"Schedule 4/1/26",phase:"p5",dur:5,cp:false},
-  {id:48,wbs:"5.6",name:"Acceptance",consultant:"All Parties",ck:"owner",ps:D(10,28),pe:D(11,19),as:null,ae:null,status:"PENDING",bt:"pending",pred:[47],notes:"20-day final acceptance period. Project completion target.",source:"Schedule 4/1/26",phase:"p5",dur:20,cp:false},
+  {id:43,wbs:"5.1",name:"Clean Up",consultant:"JL Gray",ck:"gc",ps:D(9,8),pe:D(9,15),as:null,ae:null,status:"PENDING",bt:"pending",pred:[41],notes:"7-day site cleanup after paving completion.",source:"155-Day Schedule 4/8/26",phase:"p5",dur:7,cp:false},
+  {id:44,wbs:"5.2",name:"Signs and Striping",consultant:"JL Gray",ck:"gc",ps:D(9,16),pe:D(9,19),as:null,ae:null,status:"PENDING",bt:"pending",pred:[43],notes:"3-day signage and striping installation.",source:"155-Day Schedule 4/8/26",phase:"p5",dur:3,cp:false},
+  {id:45,wbs:"5.3",name:"Reveg",consultant:"JL Gray",ck:"gc",ps:D(9,16),pe:D(9,22),as:null,ae:null,status:"PENDING",bt:"pending",pred:[43],notes:"5-day revegetation. Broadcast seed (19.33 Ac).",source:"155-Day Schedule 4/8/26",phase:"p5",dur:5,cp:false},
+  {id:46,wbs:"5.4",name:"Walk Through",consultant:"All Parties",ck:"owner",ps:D(9,23),pe:D(9,23),as:null,ae:null,status:"PENDING",bt:"milestone",pred:[44,45],notes:"Walk-through inspection milestone. All close-out activities must be complete.",source:"155-Day Schedule 4/8/26",phase:"p5",dur:0,cp:false},
+  {id:47,wbs:"5.5",name:"Punchlist",consultant:"JL Gray",ck:"gc",ps:D(9,24),pe:D(9,29),as:null,ae:null,status:"PENDING",bt:"pending",pred:[46],notes:"5-day punchlist completion after walk-through.",source:"155-Day Schedule 4/8/26",phase:"p5",dur:5,cp:false},
+  {id:48,wbs:"5.6",name:"Acceptance",consultant:"All Parties",ck:"owner",ps:D(9,30),pe:D(10,21),as:null,ae:null,status:"PENDING",bt:"pending",pred:[47],notes:"20-day final acceptance period. Project completion: 10/21/2026.",source:"155-Day Schedule 4/8/26",phase:"p5",dur:20,cp:false},
 
   // MILESTONE
   {type:"phase",wbs:"M",name:"Milestone",phaseKey:"pm"},
-  {id:99,wbs:"M.1",name:"READY FOR VERTICAL CONSTRUCTION",consultant:"All Parties",ck:"owner",ps:D(10,5),pe:D(10,5),as:null,ae:null,status:"TARGET: 10/5/2026",bt:"milestone",pred:[41],notes:"Target date for horizontal site work completion. All paving, utilities, and grading must be complete before vertical (building) construction can begin.",source:"Schedule 4/1/26",phase:"pm",dur:0,cp:true}
+  {id:99,wbs:"M.1",name:"READY FOR VERTICAL CONSTRUCTION",consultant:"All Parties",ck:"owner",ps:D(9,4),pe:D(9,4),as:null,ae:null,status:"TARGET: 9/4/2026",bt:"milestone",pred:[41],notes:"Target date for horizontal site work completion (paving complete). All paving, utilities, and grading must be complete before vertical (building) construction can begin. Per 155-Day Schedule 4/8/26.",source:"155-Day Schedule 4/8/26",phase:"pm",dur:0,cp:true}
 ];
 
 // State
@@ -1725,7 +1725,7 @@ function renderSummary(){
   let grandTotal=0;
   const phases=[
     {key:'p0',name:'Preconstruction Activity'},
-    {key:'p1',name:'Earthwork'},
+    {key:'p1',name:'Rough Cut'},
     {key:'p2',name:'Wet Utilities'},
     {key:'p3',name:'Dry Utilities (Not in Contract)'},
     {key:'p4',name:'Street Construction'},
