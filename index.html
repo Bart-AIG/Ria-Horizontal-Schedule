@@ -236,7 +236,6 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 
 <div class="delay-bar" id="delayBar">
   <div class="delay-stat"><label>Current Phase</label><div class="val" id="currentPhaseLabel" style="color:var(--navy);font-size:11px"></div></div>
-  <div class="delay-stat"><label>Est. Loan Balance</label><div class="val" id="currentBalance"></div></div>
   <div class="delay-stat"><label>Daily Interest Cost</label><div class="val" id="dailyInterest"></div></div>
   <div class="delay-stat"><label>Weekly Interest Cost</label><div class="val" id="weeklyTotal"></div></div>
   <div class="delay-stat"><label>Variance</label><div class="val" id="currentVariance"></div></div>
@@ -1019,7 +1018,6 @@ function updateDelayBar(){
   const dailyInt=dailyInterestAtDate(TODAY);
 
   document.getElementById('currentPhaseLabel').textContent='Month '+projectMonth+' of 26';
-  document.getElementById('currentBalance').textContent=fmtCost(Math.round(balance));
   document.getElementById('dailyInterest').textContent=fmtCost(Math.round(dailyInt));
   document.getElementById('weeklyTotal').textContent=fmtCost(Math.round(dailyInt*7));
 
@@ -1929,6 +1927,31 @@ function autoSave(){
     const state=gatherState();
     localStorage.setItem(SAVE_KEY,JSON.stringify(state));
   }catch(e){}
+  // Debounced cloud save: auto-push to JSONBin 3s after last change
+  scheduleCloudSync();
+}
+
+let _cloudSyncTimer=null;
+function scheduleCloudSync(){
+  if(_cloudSyncTimer)clearTimeout(_cloudSyncTimer);
+  const cfg=getConfig();
+  if(!cfg.apiKey||!cfg.binId)return; // no cloud config, skip
+  _cloudSyncTimer=setTimeout(async function(){
+    _cloudSyncTimer=null;
+    try{
+      const state=gatherState();
+      updateSaveStatus('Syncing...','#fbbf24');
+      const res=await fetch('https://api.jsonbin.io/v3/b/'+cfg.binId,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json','X-Master-Key':cfg.apiKey},
+        body:JSON.stringify(state)
+      });
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      updateSaveStatus('Synced '+new Date().toLocaleTimeString(),'rgba(34,197,94,.9)');
+    }catch(e){
+      updateSaveStatus('Sync failed','#ef4444');
+    }
+  },3000);
 }
 
 function autoLoad(){
