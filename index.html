@@ -1837,16 +1837,23 @@ function gatherState(){
   const taskState=[];
   tasks.forEach(t=>{
     if(t.type)return;
+    const orig=_origTasks[t.id];
+    if(!orig)return;
     const entry={id:t.id};
-    if(t.as)entry.as=fmtDateISO(t.as);
-    if(t.ae)entry.ae=fmtDateISO(t.ae);
-    if(t.status!==getDefaultStatus(t))entry.status=t.status;
-    if(t.projStart)entry.projStart=fmtDateISO(t.projStart);
-    if(t.projEnd)entry.projEnd=fmtDateISO(t.projEnd);
-    entry.pred=t.pred||[];
-    if(entry.as||entry.ae||entry.status||entry.projStart||entry.projEnd||JSON.stringify(entry.pred)!==JSON.stringify(getOrigPred(t.id))){
-      taskState.push(entry);
-    }
+    let changed=false;
+    // Compare current state vs embedded original -- save anything that differs
+    const curAs=fmtDateISO(t.as),origAs=fmtDateISO(orig.as);
+    const curAe=fmtDateISO(t.ae),origAe=fmtDateISO(orig.ae);
+    const curPs=fmtDateISO(t.projStart),origPs=fmtDateISO(orig.projStart);
+    const curPe=fmtDateISO(t.projEnd),origPe=fmtDateISO(orig.projEnd);
+    if(curAs!==origAs){entry.as=curAs||null;changed=true;}
+    if(curAe!==origAe){entry.ae=curAe||null;changed=true;}
+    if(t.status!==orig.status){entry.status=t.status;changed=true;}
+    if(t.bt!==orig.bt){entry.bt=t.bt;changed=true;}
+    if(curPs!==origPs){entry.projStart=curPs||null;changed=true;}
+    if(curPe!==origPe){entry.projEnd=curPe||null;changed=true;}
+    if(JSON.stringify(t.pred||[])!==JSON.stringify(orig.pred||[])){entry.pred=t.pred||[];changed=true;}
+    if(changed)taskState.push(entry);
   });
   return {
     version:4,
@@ -1862,14 +1869,23 @@ function gatherState(){
   };
 }
 
+// Snapshot of embedded task state at load time (before any user changes)
+const _origTasks={};
+tasks.forEach(t=>{
+  if(t.type)return;
+  _origTasks[t.id]={
+    as:t.as?new Date(t.as.getTime()):null,
+    ae:t.ae?new Date(t.ae.getTime()):null,
+    status:t.status,
+    bt:t.bt,
+    projStart:t.projStart?new Date(t.projStart.getTime()):null,
+    projEnd:t.projEnd?new Date(t.projEnd.getTime()):null,
+    pred:(t.pred||[]).slice()
+  };
+});
 const _origPred={};
 tasks.forEach(t=>{if(!t.type)_origPred[t.id]=(t.pred||[]).slice();});
 function getOrigPred(id){return _origPred[id]||[];}
-function getDefaultStatus(t){
-  if(t.ae)return'COMPLETE';
-  if(t.as)return'IN PROGRESS';
-  return'NOT STARTED';
-}
 function parseISODate(s){
   if(!s)return null;
   const p=s.split('-');
@@ -1877,20 +1893,20 @@ function parseISODate(s){
 }
 
 function applyState(state){
-  tasks.forEach(t=>{
-    if(t.type)return;
-    t.as=null;t.ae=null;t.projStart=null;t.projEnd=null;
-    t.pred=(_origPred[t.id]||[]).slice();
-  });
-  Object.keys(taskProgress).forEach(k=>delete taskProgress[k]);
-  Object.keys(linkLag).forEach(k=>delete linkLag[k]);
+  // DO NOT reset embedded data -- only OVERLAY saved changes on top of embedded defaults.
+  // Embedded actual dates (as, ae) and statuses from the HTML source remain intact.
+  // Saved state contains only user-made changes (delta from embedded).
+  const _btMap={'COMPLETE':'complete','COMPLETE (LATE)':'complete','IN PROGRESS':'inprogress','ACTIVE':'inprogress','SUBST. COMPLETE':'inprogress','PENDING':'pending','BLOCKED':'blocked','ACTION NEEDED':'blocked'};
   if(state.taskState){
     state.taskState.forEach(s=>{
       const t=getTask(s.id);
       if(!t)return;
-      if(s.as)t.as=parseISODate(s.as);
-      if(s.ae)t.ae=parseISODate(s.ae);
-      if(s.status)t.status=s.status;
+      // Apply saved overrides -- these are user changes that should take precedence
+      if(s.as!==undefined)t.as=s.as?parseISODate(s.as):null;
+      if(s.ae!==undefined)t.ae=s.ae?parseISODate(s.ae):null;
+      if(s.status){t.status=s.status;t.bt=s.bt||_btMap[s.status]||t.bt;}
+      if(s.projStart!==undefined)t.projStart=s.projStart?parseISODate(s.projStart):null;
+      if(s.projEnd!==undefined)t.projEnd=s.projEnd?parseISODate(s.projEnd):null;
       if(s.pred)t.pred=s.pred;
     });
   }
@@ -1906,10 +1922,10 @@ function applyState(state){
   if(state.linkLag){
     Object.keys(state.linkLag).forEach(k=>{linkLag[k]=state.linkLag[k];});
   }
+  // Safety: ensure status consistency with actual dates
   tasks.forEach(t=>{
     if(t.type)return;
-    if(t.ae&&t.status!=='COMPLETE')t.status='COMPLETE';
-    else if(t.as&&!t.ae&&t.status==='NOT STARTED')t.status='IN PROGRESS';
+    if(t.ae&&t.status!=='COMPLETE'&&t.status!=='COMPLETE (LATE)')t.status='COMPLETE';
   });
   cascadeDelays();
   render();
