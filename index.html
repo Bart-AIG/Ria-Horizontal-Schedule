@@ -220,6 +220,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     </span>
     <span id="viewerBadge" style="display:none;font-size:10px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);padding:4px 10px;border-radius:4px">VIEW ONLY</span>
     <button onclick="showExportNotes()">Export Notes</button>
+    <button onclick="downloadSchedule()" title="Download this schedule as HTML file" style="background:rgba(59,130,246,.25);border-color:rgba(59,130,246,.4)">&#11015; Download</button>
   </div>
 </div>
 
@@ -239,6 +240,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   <div class="delay-stat"><label>Daily Interest Cost</label><div class="val" id="dailyInterest"></div></div>
   <div class="delay-stat"><label>Weekly Interest Cost</label><div class="val" id="weeklyTotal"></div></div>
   <div class="delay-stat"><label>Variance</label><div class="val" id="currentVariance"></div></div>
+  <div class="delay-stat"><label>Weather Days</label><div class="val" id="weatherDaysTotal" style="color:#1d4ed8">0</div></div>
   <div class="delay-note">$57.8M construction loan @ 9.25% | Interest on drawn balance only<br>Source: Draw Tracker Closing Budget v3</div>
 </div>
 
@@ -682,8 +684,17 @@ const collapsedPhases={};
 let activeStatus=null,critPathActive=false,costBarsActive=false,depsActive=false;
 const taskProgress={}; // {taskId: {pct: 0-100, daysLeft: N, projEnd: Date}}
 const linkLag={}; // {"predId_succId": lagDays} positive=delay, negative=lead (overlap)
+const weatherDays={}; // {taskId: {days: N, note: "reason"}} weather delay days per task
 function getLag(predId,succId){return linkLag[predId+'_'+succId]||0;}
 function setLag(predId,succId,days){linkLag[predId+'_'+succId]=days;}
+function getWeatherDays(id){return(weatherDays[id]&&weatherDays[id].days)||0;}
+function setWeatherDays(id,days,note){
+  if(days<=0){delete weatherDays[id];}
+  else{weatherDays[id]={days:days,note:note||''};}
+}
+function totalWeatherDays(){
+  return Object.values(weatherDays).reduce((s,w)=>s+w.days,0);
+}
 
 // Utilities
 function dayPos(d){return Math.max(0,Math.ceil((d-START_DATE)/864e5))}
@@ -1063,6 +1074,13 @@ function updateDelayBar(){
     vEl.style.color='var(--complete)';
     showDelayAlert('',0,0);
   }
+  // Update weather days total
+  const twdEl=document.getElementById('weatherDaysTotal');
+  const twd=totalWeatherDays();
+  if(twdEl){
+    twdEl.textContent=twd>0?twd+' day'+(twd>1?'s':''):'0';
+    twdEl.style.color=twd>0?'#1d4ed8':'var(--complete)';
+  }
 }
 
 // Trace root cause of delay for a task - walks predecessors to find what changed
@@ -1367,7 +1385,15 @@ function cascadeDelays(){
     if(!t)return;
 
     // If this task has an actual end date, it's a fixed point - no override
-    if(t.ae) return;
+    // BUT weather days still extend even completed tasks for cascade purposes
+    if(t.ae){
+      // Apply weather days to completed tasks so successors cascade correctly
+      const wd=getWeatherDays(id);
+      if(wd>0&&!t.projEnd){
+        t.projEnd=new Date(t.ae.getTime()+wd*864e5);
+      }
+      return;
+    }
 
     // If this task has manual progress, its projEnd is already set
     if(taskProgress[id]){
@@ -1383,8 +1409,13 @@ function cascadeDelays(){
       const pred=getTask(pId);
       if(!pred)return;
       // Use the predecessor's projected end if it exists, otherwise planned end
-      const predEnd=pred.ae||pred.projEnd||pred.pe;
+      let predEnd=pred.ae||pred.projEnd||pred.pe;
       if(!predEnd)return;
+      // Add predecessor's weather days to their effective end (if not already in projEnd)
+      const predWd=getWeatherDays(pId);
+      if(predWd>0&&!pred.projEnd){
+        predEnd=new Date(predEnd.getTime()+predWd*864e5);
+      }
       // Apply lag: positive=wait after pred finishes, negative=overlap (start before pred finishes)
       const lag=getLag(pId,id);
       const adjEnd=new Date(predEnd.getTime()+lag*864e5);
@@ -1395,16 +1426,19 @@ function cascadeDelays(){
 
     if(!maxPredEnd)return;
 
+    // This task's own weather days
+    const wd=getWeatherDays(id);
+
     // Compare latest predecessor end (with lag) to this task's base start
     const origStart=t.ps;
     const shiftDays=Math.ceil((maxPredEnd-origStart)/864e5);
 
-    // shiftDays > 0 = predecessors finishing late (push out)
-    // shiftDays < 0 = predecessors finishing early (pull in)
-    // shiftDays === 0 = no change
-    if(shiftDays!==0){
-      t.projStart=new Date(t.ps.getTime()+shiftDays*864e5);
-      t.projEnd=new Date(t.pe.getTime()+shiftDays*864e5);
+    // Apply shift + this task's weather days
+    if(shiftDays!==0||wd>0){
+      t.projStart=new Date(t.ps.getTime()+(shiftDays>0?shiftDays:0)*864e5);
+      t.projEnd=new Date(t.pe.getTime()+(shiftDays>0?shiftDays:0)*864e5+wd*864e5);
+    }else if(wd>0){
+      t.projEnd=new Date(t.pe.getTime()+wd*864e5);
     }
   });
 }
@@ -1526,6 +1560,21 @@ function openPanel(idx){
     h+='<div><label style="display:block;font-size:10px;font-weight:600;color:var(--text-dim);margin-bottom:4px">ACTUAL END</label>';
     h+='<input type="date" value="'+(t.ae?fmtDateISO(t.ae):'')+'" onchange="setActualEnd('+t.id+',this.value)" style="width:100%;padding:6px 8px;border:1px solid '+(t.ae?'var(--complete)':'var(--border)')+';border-radius:4px;font-size:12px;font-family:JetBrains Mono,monospace;box-sizing:border-box;background:'+(t.ae?'#f0fdf4':'#fff')+'"></div>';
     h+='</div>';
+    // Weather days input
+    const wd=getWeatherDays(t.id);
+    const wdNote=(weatherDays[t.id]&&weatherDays[t.id].note)||'';
+    h+='<div style="margin-top:10px;background:'+(wd>0?'#eff6ff':'#f9fafb')+';border:1px solid '+(wd>0?'#bfdbfe':'var(--border)')+';border-radius:6px;padding:10px 12px">';
+    h+='<label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:'+(wd>0?'#1d4ed8':'var(--text-dim)')+'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg> WEATHER DAYS</label>';
+    h+='<div style="display:flex;gap:8px;align-items:center;margin-top:6px">';
+    h+='<input type="number" min="0" value="'+wd+'" onchange="applyWeatherDays('+t.id+',parseInt(this.value)||0,document.getElementById(\'wdNote_'+t.id+'\').value)" style="width:60px;padding:6px 8px;border:1px solid '+(wd>0?'#93c5fd':'var(--border)')+';border-radius:4px;font-size:14px;font-weight:700;font-family:JetBrains Mono,monospace;text-align:center;background:#fff">';
+    h+='<span style="font-size:11px;color:var(--text-dim)">days added to this activity</span>';
+    h+='</div>';
+    h+='<input type="text" id="wdNote_'+t.id+'" value="'+wdNote.replace(/"/g,'&quot;')+'" placeholder="Reason (e.g. Rain 4/10-4/12)" onchange="applyWeatherDays('+t.id+','+wd+',this.value)" style="width:100%;margin-top:6px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;box-sizing:border-box;background:#fff">';
+    if(wd>0){
+      const pushEnd=new Date((t.ae||t.projEnd||t.pe).getTime());
+      h+='<div style="font-size:10px;color:#1d4ed8;margin-top:6px;font-weight:600">Pushes this activity '+wd+' day'+(wd>1?'s':'')+' and cascades to all successors</div>';
+    }
+    h+='</div>';
   }else if(t.as||t.ae){
     h+='<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">';
     if(t.as)h+='<div class="date-card" style="border-color:var(--complete)"><label>Actual Start</label><div class="date-val mono" style="color:var(--complete)">'+fmtDate(t.as)+'</div></div>';
@@ -1628,6 +1677,27 @@ function changeStatus(idx,newStatus){
   cascadeDelays();render();updateDelayBar();
   openPanel(idx);
   showToast('Status updated to '+newStatus);
+}
+
+function applyWeatherDays(taskId,days,note){
+  setWeatherDays(taskId,days,note);
+  cascadeDelays();render();updateDelayBar();
+  const t=getTask(taskId);
+  if(t)openPanel(tasks.indexOf(t));
+  showToast(days>0?days+' weather day'+(days>1?'s':'')+' applied':'Weather days cleared');
+}
+
+function downloadSchedule(){
+  const html=document.documentElement.outerHTML;
+  const blob=new Blob(['<!DOCTYPE html>\n'+html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  const d=new Date();
+  a.download='Ria_Schedule_'+d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')+'.html';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Schedule downloaded');
 }
 
 function closePanel(){document.getElementById('detailPanel').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
@@ -1825,9 +1895,24 @@ function showGuide(){document.getElementById('guideModal').classList.add('open')
 const SAVE_KEY='ria_schedule_v4_state';
 const CONFIG_KEY='ria_schedule_v4_config';
 
-// Cloud config - stored in localStorage
+// Hardcoded cloud config defaults - survives localStorage clears, browser changes, etc.
+// If these are set, they are used as fallback when localStorage config is empty.
+const DEFAULT_API_KEY='$2a$10$ReiNlvfS9kdlT7HlmsS.reIm/znjD1ACMzFjXf/zC8sf1i/FhRCrC';
+const DEFAULT_BIN_ID='69de8d8e856a68218933b9a4';
+
+// Cloud config - localStorage with hardcoded fallback
 function getConfig(){
-  try{const c=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');return c;}catch(e){return{};}
+  try{
+    const c=JSON.parse(localStorage.getItem(CONFIG_KEY)||'{}');
+    // Fill in from hardcoded defaults if localStorage is missing values
+    if(!c.apiKey&&DEFAULT_API_KEY)c.apiKey=DEFAULT_API_KEY;
+    if(!c.binId&&DEFAULT_BIN_ID)c.binId=DEFAULT_BIN_ID;
+    // Persist merged config back to localStorage so it sticks
+    if(c.apiKey||c.binId)setConfig(c);
+    return c;
+  }catch(e){
+    return{apiKey:DEFAULT_API_KEY,binId:DEFAULT_BIN_ID};
+  }
 }
 function setConfig(cfg){
   try{localStorage.setItem(CONFIG_KEY,JSON.stringify(cfg));}catch(e){}
@@ -1865,7 +1950,8 @@ function gatherState(){
       o[k]={pct:tp.pct,daysLeft:tp.daysLeft,projEnd:fmtDateISO(tp.projEnd)};
       return o;
     },{}),
-    linkLag:Object.assign({},linkLag)
+    linkLag:Object.assign({},linkLag),
+    weatherDays:Object.assign({},weatherDays)
   };
 }
 
@@ -1921,6 +2007,11 @@ function applyState(state){
   }
   if(state.linkLag){
     Object.keys(state.linkLag).forEach(k=>{linkLag[k]=state.linkLag[k];});
+  }
+  // Restore weather days
+  Object.keys(weatherDays).forEach(k=>delete weatherDays[k]);
+  if(state.weatherDays){
+    Object.keys(state.weatherDays).forEach(k=>{weatherDays[k]=state.weatherDays[k];});
   }
   // Safety: ensure status consistency with actual dates
   tasks.forEach(t=>{
