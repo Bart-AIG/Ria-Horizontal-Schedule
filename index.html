@@ -894,7 +894,7 @@ function renderGantt(){
     // Projected shift indicator (operating end vs base end)
     const opEndShift=t.ae||t.projEnd;
     if(opEndShift&&t.bpe){
-      const shift=Math.ceil((opEndShift-t.bpe)/864e5);
+      const shift=Math.round((opEndShift-t.bpe)/864e5);
       if(shift>0)h+='<span style="font-size:9px;font-weight:700;color:var(--critical);font-family:JetBrains Mono,monospace;margin-left:2px;background:#fee2e2;padding:0 4px;border-radius:2px">+'+shift+'d</span>';
       if(shift<0)h+='<span style="font-size:9px;font-weight:700;color:#16a34a;font-family:JetBrains Mono,monospace;margin-left:2px;background:#f0fdf4;padding:0 4px;border-radius:2px">'+shift+'d</span>';
     }
@@ -930,7 +930,7 @@ function renderGantt(){
     const opEnd=t.ae||t.projEnd||t.pe;
     // Base dates for ghost bar reference = ORIGINAL 155-day baseline (bps/bpe)
     const baseS=t.bps||t.ps, baseE=t.bpe||t.pe;
-    const slipDays=(opEnd&&baseE)?Math.ceil((opEnd-baseE)/864e5):0;
+    const slipDays=(opEnd&&baseE)?Math.round((opEnd-baseE)/864e5):0;
     if(opStart&&opEnd){
       if(t.bt==="milestone"){
         const mPos=dayPos(opEnd)*DAY_W;
@@ -1066,7 +1066,7 @@ function updateDelayBar(){
   if(pavingTask){
     const pavEnd=pavingTask.ae||pavingTask.projEnd||pavingTask.pe;
     if(pavEnd&&pavingTask.bpe){
-      pavingVariance=Math.ceil((pavEnd-pavingTask.bpe)/864e5);
+      pavingVariance=Math.round((pavEnd-pavingTask.bpe)/864e5);
     }
   }
 
@@ -1079,7 +1079,7 @@ function updateDelayBar(){
     if(cat==='complete')return;
     const projEnd=t.ae||t.projEnd||t.pe;
     if(!projEnd||!t.bpe)return;
-    const slip=Math.ceil((projEnd-t.bpe)/864e5);
+    const slip=Math.round((projEnd-t.bpe)/864e5);
     if(Math.abs(slip)>Math.abs(worstSlip)||(slip>0&&slip>=worstSlip)){
       worstSlip=slip;
       worstTaskName=t.name;
@@ -1122,16 +1122,16 @@ function traceDelayCause(taskId){
     if(!t)return;
     // Check if this task has a direct user-entered change
     if(t.ae&&t.bpe){
-      const slip=Math.ceil((t.ae-t.bpe)/864e5);
+      const slip=Math.round((t.ae-t.bpe)/864e5);
       if(slip>0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'actual_end',detail:'Actual end '+fmtDate(t.ae)+' vs base '+fmtDate(t.bpe),days:slip});
       if(slip<0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'actual_end',detail:'Finished early '+fmtDate(t.ae)+' vs base '+fmtDate(t.bpe),days:slip});
     }
     if(t.as&&t.bps){
-      const slip=Math.ceil((t.as-t.bps)/864e5);
+      const slip=Math.round((t.as-t.bps)/864e5);
       if(slip>0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'actual_start',detail:'Started late '+fmtDate(t.as)+' vs base '+fmtDate(t.bps),days:slip});
     }
     if(taskProgress[id]&&t.projEnd&&t.bpe){
-      const slip=Math.ceil((t.projEnd-t.bpe)/864e5);
+      const slip=Math.round((t.projEnd-t.bpe)/864e5);
       if(slip>0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'progress',detail:taskProgress[id].pct+'% complete, '+taskProgress[id].daysLeft+'d remaining, proj. '+fmtDate(t.projEnd),days:slip});
       if(slip<0) causes.push({id:t.id,name:t.name,wbs:t.wbs,type:'progress',detail:taskProgress[id].pct+'% complete, proj. '+fmtDate(t.projEnd)+' (ahead)',days:slip});
     }
@@ -1173,7 +1173,7 @@ function showDelayAlert(taskName, delayDays, delayCost){
     if(delayDays>0){
       // Calculate paving push specifically
       const pavingTask=getTask(41);
-      const pavingPush=pavingTask&&pavingTask.projEnd&&pavingTask.bpe?Math.max(0,Math.ceil((pavingTask.projEnd-pavingTask.bpe)/864e5)):delayDays;
+      const pavingPush=pavingTask&&pavingTask.projEnd&&pavingTask.bpe?Math.max(0,Math.round((pavingTask.projEnd-pavingTask.bpe)/864e5)):delayDays;
       const pavingCost=calculateDelayCost(pavingPush);
 
       // Trace root cause
@@ -1571,8 +1571,8 @@ function openPanel(idx){
   // PROJECTED / OPERATING DATES (dynamic - what the schedule runs on)
   const opS=t.as||t.projStart||t.ps;
   const opE=t.ae||t.projEnd||t.pe;
-  const startShift=Math.ceil((opS-t.bps)/864e5);
-  const endShift=Math.ceil((opE-t.bpe)/864e5);
+  const startShift=Math.round((opS-t.bps)/864e5);
+  const endShift=Math.round((opE-t.bpe)/864e5);
   const hasShift=startShift!==0||endShift!==0;
   h+='<div class="panel-section"><h3>Projected Dates <span style="font-size:9px;font-weight:400">(schedule runs on these)</span></h3>';
   h+='<div class="date-cards">';
@@ -1843,7 +1843,7 @@ function renderSummary(){
       h+='<td class="mono" style="font-size:11px">'+t.dur+'d</td>';
       const tOpS=t.as||t.projStart||t.ps;
       const tOpE=t.ae||t.projEnd||t.pe;
-      const tShift=Math.ceil((tOpE-t.bpe)/864e5);
+      const tShift=Math.round((tOpE-t.bpe)/864e5);
       h+='<td class="mono" style="font-size:11px">'+fmtDate(tOpS)+'</td>';
       h+='<td class="mono" style="font-size:11px">'+fmtDate(tOpE)+(tShift!==0?' <span style="font-size:9px;color:'+(tShift>0?'var(--critical)':'var(--complete)')+'">'+(tShift>0?'+':'')+tShift+'d</span>':'')+'</td>';
       h+='<td style="font-size:10px;color:var(--text-dim)">'+itemStr+'</td>';
@@ -2360,10 +2360,4 @@ window.addEventListener('resize',function(){
         </svg>
         <span id="claude-static-chat-tooltip" style="position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%); padding: 6px 12px; background: #30302E; color: #FAF9F5; border-radius: 6px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Open chat</span>
       </button>
-      <button id="claude-static-close-button" style="position: relative; display: inline-flex; align-items: center; justify-content: center; padding: 6px; background: transparent; border: none; cursor: pointer; pointer-events: auto; vertical-align: middle; width: 32px; height: 32px; margin-left: 4px; border-radius: 8px; transition: background 0.2s;">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px; display: block;">
-          <path d="M15.1464 4.14642C15.3417 3.95121 15.6582 3.95118 15.8534 4.14642C16.0486 4.34168 16.0486 4.65822 15.8534 4.85346L10.7069 9.99997L15.8534 15.1465C16.0486 15.3417 16.0486 15.6583 15.8534 15.8535C15.6826 16.0244 15.4186 16.0461 15.2245 15.918L15.1464 15.8535L9.99989 10.707L4.85338 15.8535C4.65813 16.0486 4.34155 16.0486 4.14634 15.8535C3.95115 15.6583 3.95129 15.3418 4.14634 15.1465L9.29286 9.99997L4.14634 4.85346C3.95129 4.65818 3.95115 4.34162 4.14634 4.14642C4.34154 3.95128 4.65812 3.95138 4.85338 4.14642L9.99989 9.29294L15.1464 4.14642Z" fill="#141413"></path>
-        </svg>
-        <span id="claude-static-close-tooltip" style="position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%); padding: 6px 12px; background: #30302E; color: #FAF9F5; border-radius: 6px; font-size: 12px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">Dismiss</span>
-      </button>
-    </div></body></html>
+      <button id="claude-static-close-button" style="position: relative; display: inline-flex; align-items: center; justify-content: center; padding: 6px; background: transparent; border: none; cursor: pointer; pointer-events: auto; vertical-align: middle; width: 32px; height: 32px; marg
