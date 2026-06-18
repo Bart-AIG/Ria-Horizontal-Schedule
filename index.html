@@ -658,7 +658,10 @@ const tasks=[
   // PHASE 3: DRY UTILITIES - NOT IN CONTRACT (Baseline: 155-Day Schedule 4/8/26)
   {type:"phase",wbs:"3.0",name:"Dry Utilities (Not in Contract)",phaseKey:"p3"},
   {id:22,wbs:"3.1",name:"Dry Trenching (Pending Plans)",consultant:"Utility Provider",ck:"utility",ps:D(4,30),pe:D(5,22),as:null,ae:null,status:"PENDING",bt:"pending",pred:[13],notes:"20-day dry trenching. Linked to wet trenching (ID 13) per JL Gray - dry trenchers move in 14-20 days after wet utility trenching starts. Pending approved plans from utility provider. No cost to JL Gray contract.",source:"155-Day Schedule 4/8/26",phase:"p3",dur:20,cp:false,ncp:true},
-  {id:23,wbs:"3.2",name:"Crossings",consultant:"Utility Provider",ck:"utility",ps:D(7,9),pe:D(7,20),as:null,ae:null,status:"PENDING",bt:"pending",pred:[22],notes:"10-day dry utility crossings. Must be installed before street construction can proceed. Coordination with wet utilities required.",source:"155-Day Schedule 4/8/26",phase:"p3",dur:10,cp:false},
+  {id:60,wbs:"3.1a",name:"POA Creation & Oncor Review/Acceptance",consultant:"AIG / 573 Limmer Loop POA / Oncor",ck:"owner",ps:D(6,18),pe:D(7,16),as:D(6,18),ae:null,status:"IN PROGRESS",bt:"inprogress",pred:[62],notes:"573 Limmer Loop POA formed 6/12/26 for Oncor streetlights; bylaws/CC&Rs drafted, recording ~6/22. Oncor review + acceptance ~4 wks (ESTIMATE, accept ~7/16). Gates Crossings FINISH (finish-to-finish). Per 6/18/26 meeting.",source:"Meeting 6/18/26",phase:"p3",dur:28,cp:false},
+  {id:61,wbs:"3.1b",name:"Streetlight Material Delivery (2 wk)",consultant:"Oncor / Supplier",ck:"utility",ps:D(7,16),pe:D(7,30),as:null,ae:null,status:"PENDING",bt:"pending",pred:[60],notes:"2-week streetlight material lead time; begins after Oncor accepts the POA. Finish-to-finish with Crossings (Crossings cannot finish until material delivered). Per 6/18/26 meeting.",source:"Meeting 6/18/26",phase:"p3",dur:14,cp:false},
+  {id:62,wbs:"3.1c",name:"CC&R Lender Consent",consultant:"AIG / IH Construction Lender",ck:"owner",ps:D(6,18),pe:D(7,16),as:D(6,18),ae:null,status:"IN PROGRESS",bt:"inprogress",pred:[],notes:"Lender consent to the CC&Rs, running in parallel with POA creation/Oncor approval. Finish-to-finish with POA (60) - POA cannot finish until the lender consents. Duration ESTIMATE. Per 6/18/26 meeting.",source:"Meeting 6/18/26",phase:"p3",dur:28,cp:false},
+  {id:23,wbs:"3.2",name:"Crossings",consultant:"Utility Provider",ck:"utility",ps:D(7,9),pe:D(7,20),as:null,ae:null,status:"PENDING",bt:"pending",pred:[22,60,61],notes:"10-day dry utility crossings. Must be installed before street construction can proceed. Coordination with wet utilities required.",source:"155-Day Schedule 4/8/26",phase:"p3",dur:10,cp:false},
   {id:24,wbs:"3.3",name:"Main",consultant:"Utility Provider",ck:"utility",ps:D(7,21),pe:D(8,22),as:null,ae:null,status:"PENDING",bt:"pending",pred:[23],notes:"30-day main dry utility installation.",source:"155-Day Schedule 4/8/26",phase:"p3",dur:30,cp:false},
   {id:25,wbs:"3.4",name:"Transformer Pads",consultant:"Utility Provider",ck:"utility",ps:D(8,24),pe:D(9,11),as:null,ae:null,status:"PENDING",bt:"pending",pred:[24],notes:"15-day transformer pad installation. Last activity in dry utility phase.",source:"155-Day Schedule 4/8/26",phase:"p3",dur:15,cp:false},
 
@@ -2038,7 +2041,7 @@ function gatherState(){
   weatherDays[13]={days:5,note:'May rain days (JL Gray 6/10/26)'};
   // 5) Absorb cascade pushes so the schedule reproduces the JL Gray plan exactly.
   //    For each link, lag = successor planned start - predecessor effective end (incl weather).
-  var GATING=[50,51,52,53];
+  var GATING=[50,51,52,53,60,61,62];
   tasks.forEach(function(t){ if(t.type||!t.pred)return; t.pred.forEach(function(pid){
     if(GATING.indexOf(pid)>=0){ linkLag[pid+'_'+t.id]=0; return; } // permit/fee/neighbor = finish-to-start, slip cascades
     var p=getTask(pid); if(!p||!t.ps)return;
@@ -2047,6 +2050,10 @@ function gatherState(){
     if(wd>0&&!p.projEnd)pe=new Date(pe.getTime()+wd*864e5);
     linkLag[pid+'_'+t.id]=Math.round((t.ps-pe)/864e5);
   }); });
+  // Finish-to-finish: Crossings (23) cannot FINISH until POA (60) and Streetlight Material (61) are done.
+  // FF modeled as FS with lag = -(successor duration), so successor END tracks predecessor END.
+  (function(){ var c=getTask(23); if(c){ var cd=Math.round((c.pe-c.ps)/864e5); linkLag['60_23']=-cd; linkLag['61_23']=-cd; }
+    var p=getTask(60); if(p){ var pd=Math.round((p.pe-p.ps)/864e5); linkLag['62_60']=-pd; } })();
 })();
 
 // Snapshot of embedded task state at load time (before any user changes)
