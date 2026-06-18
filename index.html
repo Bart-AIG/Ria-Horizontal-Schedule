@@ -683,7 +683,7 @@ const tasks=[
   {id:52,wbs:"4.13a",name:"Emergency Easement Driveway Permit",consultant:"AIG / Williamson County",ck:"multi",ps:D(10,12),pe:D(10,26),as:null,ae:null,status:"PENDING",bt:"pending",pred:[],notes:"Driveway permit for secondary emergency access easement. REQUIRED before emergency access drive prepave. Date shown = latest finish (required-by); team goal is mid-July, so large float. Duration ESTIMATE. Per 6/18/26 meeting.",source:"Meeting 6/18/26",phase:"p4",dur:15,cp:false},
   {id:53,wbs:"4.13b",name:"Neighbor Clears Items in Easement Path",consultant:"AIG / Neighbor",ck:"owner",ps:D(10,16),pe:D(10,26),as:null,ae:null,status:"PENDING",bt:"pending",pred:[],notes:"Neighbor must remove items obstructing the emergency access easement path. REQUIRED before emergency access drive prepave. Neighbor not yet receptive - RISK item. Date shown = latest finish (required-by). Per 6/18/26 meeting.",source:"Meeting 6/18/26",phase:"p4",dur:10,cp:false},
   {id:54,wbs:"4.13c",name:"Emergency Access Drive Prepave",consultant:"JL Gray",ck:"gc",ps:D(10,27),pe:D(10,29),as:null,ae:null,status:"PENDING",bt:"pending",pred:[52,53],notes:"Pre-paving prep for the secondary emergency access drive (fire lane). Gated by driveway permit (4.13a) and neighbor clearing the easement path (4.13b). Feeds Prepave/Paving. Duration ESTIMATE. Per 6/18/26 meeting.",source:"Meeting 6/18/26",phase:"p4",dur:3,cp:false},
-  {id:40,wbs:"4.14",name:"Prepave",consultant:"JL Gray",ck:"gc",ps:D(9,2),pe:D(9,2),as:null,ae:null,status:"PENDING",bt:"milestone",pred:[38,39],notes:"Pre-pave inspection milestone. Utility adjustments, construction staking, final checks.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:0,cp:true},
+  {id:40,wbs:"4.14",name:"Prepave",consultant:"JL Gray",ck:"gc",ps:D(9,2),pe:D(9,2),as:null,ae:null,status:"PENDING",bt:"milestone",pred:[39],notes:"Pre-pave inspection milestone. Utility adjustments, construction staking, final checks.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:0,cp:true},
   {id:41,wbs:"4.15",name:"Paving",consultant:"JL Gray",ck:"gc",ps:D(9,3),pe:D(9,4),as:null,ae:null,status:"PENDING",bt:"pending",pred:[40],notes:"1-day paving. 2\" and 2.5\" HMAC surface course for all roads, turn lane base and HMAC, fire lane striping, signage, pavement connections.",source:"155-Day Schedule 4/8/26",phase:"p4",dur:1,cp:true},
 
   // PHASE 5: CLOSE OUT (Baseline: 155-Day Schedule 4/8/26)
@@ -698,7 +698,7 @@ const tasks=[
 
   // MILESTONE
   {type:"phase",wbs:"M",name:"Milestone",phaseKey:"pm"},
-  {id:99,wbs:"M.1",name:"READY FOR VERTICAL CONSTRUCTION",consultant:"All Parties",ck:"owner",ps:D(9,4),pe:D(9,4),as:null,ae:null,status:"TARGET: 9/4/2026",bt:"milestone",pred:[41,54],notes:"Target date for horizontal site work completion (paving complete). All paving, utilities, and grading must be complete before vertical (building) construction can begin. Per 155-Day Schedule 4/8/26.",source:"155-Day Schedule 4/8/26",phase:"pm",dur:0,cp:true}
+  {id:99,wbs:"M.1",name:"READY FOR VERTICAL CONSTRUCTION",consultant:"All Parties",ck:"owner",ps:D(9,4),pe:D(9,4),as:null,ae:null,status:"TARGET: 9/4/2026",bt:"milestone",pred:[41,54,38],notes:"Target date for horizontal site work completion (paving complete). All paving, utilities, and grading must be complete before vertical (building) construction can begin. Per 155-Day Schedule 4/8/26.",source:"155-Day Schedule 4/8/26",phase:"pm",dur:0,cp:true}
 ];
 
 // State
@@ -2057,6 +2057,7 @@ function gatherState(){
     var p=getTask(60); if(p){ var pd=Math.round((p.pe-p.ps)/864e5); linkLag['62_60']=-pd; }
     linkLag['23_31']=0;  // Crossings gates Subgrade Prep (real FS; ~26d float before it delays the road)
     linkLag['54_99']=0;  // Emergency access drive gates Ready-for-Vertical (parallel to paving)
+    linkLag['38_99']=0;  // Fine Grade Pads (building pads) gate Ready-for-Vertical, not road paving
   })();
 })();
 
